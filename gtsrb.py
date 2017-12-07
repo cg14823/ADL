@@ -63,7 +63,7 @@ def deepnn(x_image, class_count=43):
     # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
     conv1 = tf.layers.conv2d(
-        inputs=x_image2,
+        inputs=x_image,
         filters=32,
         strides=(1,0),
         kernel_size=[5, 5],
@@ -164,11 +164,10 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x_image = tf.placeholder(tf.float32, shape=[100,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-        x_image2 = tf.map_fn(tf.image.per_image_standardization, x_image)
+        x = tf.placeholder(tf.float32, shape=[100,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+        x_image = tf.map_fn(tf.image.per_image_standardization, x)
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
-        print(x_image2.get_shape())
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
@@ -212,13 +211,13 @@ def main(_):
             print(test_images.shape)
 
             _, train_summary_str = sess.run([train_step, train_summary],
-                                            feed_dict={x_image: train_images, y_: train_labels})
+                                            feed_dict={x: train_images, y_: train_labels})
 
             # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:
                 train_writer.add_summary(train_summary_str, step)
                 validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                       feed_dict={x_image: test_images, y_: test_labels})
+                                                                       feed_dict={x: test_images, y_: test_labels})
                 print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
                 validation_writer.add_summary(validation_summary_str, step)
 
@@ -239,7 +238,7 @@ def main(_):
         while evaluated_images != data_set['X_test'].shape[0]:
             # Don't loop back when we reach the end of the test set
             (test_images, test_labels) = test_batch.next()
-            temp_acc = sess.run(accuracy, feed_dict={x_image: test_images, y_: test_labels})
+            temp_acc = sess.run(accuracy, feed_dict={x: test_images, y_: test_labels})
             test_accuracy += temp_acc 
 
             batch_count += 1

@@ -32,7 +32,7 @@ tf.app.flags.DEFINE_integer('save-model-frequency', 200,
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
 # Optimisation hyperparameters
-tf.app.flags.DEFINE_integer('max-steps', 1000,
+tf.app.flags.DEFINE_integer('max-steps', 10000,
                             'Number of mini-batches to train on. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
@@ -138,28 +138,9 @@ def deepnn(x_image, class_count=43):
     )
     conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, units=1024, name='fc1')
-    logits = tf.layers.dense(inputs=fc1, activation = tf.nn.softmax, units=class_count, name='fc2')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax, units=1024, name='fc1')
+    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
     return logits
-
-def whitening(image):
-    mean0, var0 = tf.nn.moments(tf.reshape(image[:,:,0],[-1]),[0])
-    mean1, var1 = tf.nn.moments(tf.reshape(image[:,:,1],[-1]),[0])
-    mean2, var2 = tf.nn.moments(tf.reshape(image[:,:,2],[-1]),[0])
-    
-    std0 = tf.sqrt(var0)
-    std1 = tf.sqrt(var1)
-    std2 = tf.sqrt(var2)
-    
-    meanT0 = tf.fill([IMG_HEIGHT, IMG_WIDTH, 1], mean0)
-    meanT1 = tf.fill([IMG_HEIGHT, IMG_WIDTH, 1], mean1)
-    meanT2 = tf.fill([IMG_HEIGHT, IMG_WIDTH, 1], mean2)
-
-    newTens = tf.placeholder(tf.float32,shape=[IMG_HEIGHT,IMG_WIDTH,IMG_CHANNELS])
-    newTens[:,:,0] = tf.scalar_mul(1.0/std0, tf.subtract(image[:,:,0], mean0))
-    newTens[:,:,1] = tf.scalar_mul(1.0/std1, tf.subtract(image[:,:,1], mean1))
-    newTens[:,:,2] = tf.scalar_mul(1.0/std2, tf.subtract(image[:,:,2], mean2))
-    return newTens
 
 def main(_):
     tf.reset_default_graph()
@@ -215,11 +196,16 @@ def main(_):
                 # Validation: Monitoring accuracy using validation set
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
+                    valid_acc_tmp = 0
+                    validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
                                                                             feed_dict={x: test_images, y_: test_labels})
-                        print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
+                        valid_acc_tmp += validation_accuracy
+                        validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
+                    valid_acc = valid_acc_tmp/validation_steps
+                    print('step {}, accuracy on validation set : {}'.format(step, valid_acc))
 
                 # Save the model checkpoint periodically.
                 if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:

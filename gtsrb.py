@@ -63,7 +63,7 @@ def deepnn(x_image, class_count=43):
     # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
     conv1 = tf.layers.conv2d(
-        inputs=x_image,
+        inputs=x_image2,
         filters=32,
         strides=(1,0),
         kernel_size=[5, 5],
@@ -164,11 +164,11 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x_image = tf.placeholder(tf.float32)
-        x_image = tf.map_fn(tf.image.per_image_standardization, x_image)
+        x_image = tf.placeholder(tf.float32, shape=[[-1,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS]])
+        x_image2 = tf.map_fn(tf.image.per_image_standardization, x_image)
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
-        print(tf.get_shape(x_image))
+        print(x_image2.get_shape())
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
@@ -209,6 +209,7 @@ def main(_):
         for step in range(0, FLAGS.max_steps, 1):
             (train_images, train_labels) = train_batch.next()
             (test_images, test_labels) = test_batch.next()
+            print(test_images.shape)
 
             _, train_summary_str = sess.run([train_step, train_summary],
                                             feed_dict={x_image: train_images, y_: train_labels})

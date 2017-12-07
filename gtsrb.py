@@ -22,7 +22,7 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 10,
+tf.app.flags.DEFINE_integer('log-frequency', 100,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
 tf.app.flags.DEFINE_integer('flush-frequency', 50,
@@ -32,7 +32,7 @@ tf.app.flags.DEFINE_integer('save-model-frequency', 100,
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
 # Optimisation hyperparameters
-tf.app.flags.DEFINE_integer('max-steps', 10000,
+tf.app.flags.DEFINE_integer('max-steps', 1000,
                             'Number of mini-batches to train on. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
@@ -206,12 +206,12 @@ def main(_):
         sess.run(tf.global_variables_initializer())
 
         # Training and validation
-        train_batch = batch_generator(data_set,'train')
-        test_batch = batch_generator(data_set,'test')
+        
         for step in range(0, FLAGS.max_steps, 1):
+            train_batch = batch_generator(data_set,'train')
+            test_batch = batch_generator(data_set,'test')
             (train_images, train_labels) = train_batch.next()
             (test_images, test_labels) = test_batch.next()
-            print(test_images.shape)
 
             _, train_summary_str = sess.run([train_step, train_summary],
                                             feed_dict={x: train_images, y_: train_labels})

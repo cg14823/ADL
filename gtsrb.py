@@ -7,13 +7,11 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from cleverhans.attacks import FastGradientMethod
-from cleverhans.model import CallableModelWrapper
+
 
 here = os.path.dirname(__file__)
 sys.path.append(here)
 sys.path.append(os.path.join(here, '..', 'CIFAR10'))
-import cifar10 as cf
 
 CLASS_COUNT  = 43
 IMG_WIDTH    = 32

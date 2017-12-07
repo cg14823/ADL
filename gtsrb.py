@@ -68,7 +68,7 @@ def deepnn(x_image, class_count=43):
     conv1 = tf.layers.conv2d(
         inputs=x_image,
         filters=32,
-        initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         strides=(1,1),
         kernel_size=[5, 5],
         padding='same',
@@ -90,7 +90,7 @@ def deepnn(x_image, class_count=43):
     conv2 = tf.layers.conv2d(
         inputs=pool1,
         filters=32,
-        initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[5, 5],
         padding='same',
         strides=(1,1),
@@ -112,7 +112,7 @@ def deepnn(x_image, class_count=43):
     conv3 = tf.layers.conv2d(
         inputs=pool2,
         filters=64,
-        initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[5, 5],
         padding='same',
         strides=(1,1),
@@ -132,7 +132,7 @@ def deepnn(x_image, class_count=43):
     conv4 = tf.layers.conv2d(
         inputs=pool3,
         filters=64,
-        initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[4, 4],
         padding='valid',
         strides=(1,1),
@@ -142,7 +142,7 @@ def deepnn(x_image, class_count=43):
     )
     conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax, units=1024, initializer=tf.random_uniform_initializer(-0.05,0.05), name='fc1')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax, units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
     return logits
 

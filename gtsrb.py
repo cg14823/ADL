@@ -157,7 +157,7 @@ def main(_):
         logits = deepnn(x_image)
         model = CallableModelWrapper(deepnn, 'logits')
 
-        cross_entropy = tf.reduce_mean(tf.nn.log_softmax(logits=logits))
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
@@ -167,8 +167,8 @@ def main(_):
         global_step = tf.Variable(0, trainable=False)  # this will be incremented automatically by tensorflow
         decayed_learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step,
                                                            decay_steps, decay_rate, staircase=True)
-        train_step = tf.train.AdamOptimizer(decayed_learning_rate).minimize(cross_entropy, global_step=global_step)
-
+        train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
+        
     loss_summary = tf.summary.scalar("Loss", cross_entropy)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
     learning_rate_summary = tf.summary.scalar("Learning Rate", decayed_learning_rate)

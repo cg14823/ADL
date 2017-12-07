@@ -22,7 +22,7 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 100,
+tf.app.flags.DEFINE_integer('log-frequency', 1,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
 tf.app.flags.DEFINE_integer('flush-frequency', 50,
@@ -208,21 +208,18 @@ def main(_):
         # Training and validation
         
         for step in range(0, FLAGS.max_steps, 1):
-            train_batch = batch_generator(data_set,'train')
-            test_batch = batch_generator(data_set,'test')
-            (train_images, train_labels) = train_batch.next()
-            (test_images, test_labels) = test_batch.next()
-
-            _, train_summary_str = sess.run([train_step, train_summary],
-                                            feed_dict={x: train_images, y_: train_labels})
+            for (train_images, train_labels) in batch_generator(data_set, 'train'):
+                _, train_summary_str = sess.run([train_step, train_summary],
+                                                feed_dict={x: train_images, y_: train_labels})
 
             # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:
                 train_writer.add_summary(train_summary_str, step)
-                validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                       feed_dict={x: test_images, y_: test_labels})
-                print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
-                validation_writer.add_summary(validation_summary_str, step)
+                for (test_images, test_labels) in batch_generator(data_set, 'test'):
+                    validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                                                                        feed_dict={x: test_images, y_: test_labels})
+                    print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
+                    validation_writer.add_summary(validation_summary_str, step)
 
             # Save the model checkpoint periodically.
             if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:

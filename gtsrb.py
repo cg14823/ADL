@@ -168,6 +168,7 @@ def main(_):
         x_image = tf.map_fn(tf.image.per_image_standardization, x_image)
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
+        print(tf.get_shape(x_image))
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)

@@ -22,12 +22,12 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 1,
+tf.app.flags.DEFINE_integer('log-frequency', 100,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 50,
+tf.app.flags.DEFINE_integer('flush-frequency', 100,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 100,
+tf.app.flags.DEFINE_integer('save-model-frequency', 200,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
@@ -206,28 +206,30 @@ def main(_):
         sess.run(tf.global_variables_initializer())
 
         # Training and validation
-        
-        for step in range(0, FLAGS.max_steps, 1):
+        step =0
+        while step < FLAGS.max_steps:
             for (train_images, train_labels) in batch_generator(data_set, 'train'):
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels})
 
-            # Validation: Monitoring accuracy using validation set
-            if step % FLAGS.log_frequency == 0:
-                train_writer.add_summary(train_summary_str, step)
-                for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                    validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                        feed_dict={x: test_images, y_: test_labels})
-                    print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
-                    validation_writer.add_summary(validation_summary_str, step)
+                # Validation: Monitoring accuracy using validation set
+                if step % FLAGS.log_frequency == 0:
+                    train_writer.add_summary(train_summary_str, step)
+                    for (test_images, test_labels) in batch_generator(data_set, 'test'):
+                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                                                                            feed_dict={x: test_images, y_: test_labels})
+                        print('step {}, accuracy on validation set : {}'.format(step, validation_accuracy))
+                        validation_writer.add_summary(validation_summary_str, step)
 
-            # Save the model checkpoint periodically.
-            if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
-                saver.save(sess, checkpoint_path, global_step=step)
+                # Save the model checkpoint periodically.
+                if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
+                    saver.save(sess, checkpoint_path, global_step=step)
 
-            if step % FLAGS.flush_frequency == 0:
-                train_writer.flush()
-                validation_writer.flush()
+                if step % FLAGS.flush_frequency == 0:
+                    train_writer.flush()
+                    validation_writer.flush()
+                
+                step += 1
 
         # Resetting the internal batch indexes
         test_batch = batch_generator(data_set,'test')

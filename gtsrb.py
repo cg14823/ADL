@@ -59,8 +59,8 @@ def deepnn(x_image, class_count=43):
       (airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck)
     """
     # pad the inputs to the convloution layer
-    padding = tf.constant([2,2],[2,2])
-    pad_image = tf.pad
+    # padding = tf.constant([2,2],[2,2])
+    # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
     conv1 = tf.layers.conv2d(
         inputs=x_image,

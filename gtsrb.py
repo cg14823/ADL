@@ -136,7 +136,7 @@ def deepnn(x_image, class_count=43):
         use_bias=False,
         name='conv4'
     )
-    conv4_flat = tf.reshape(conv4, [BATCH_SIZE,64], name='conv4_flattened')
+    conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
     fc1 = tf.layers.dense(inputs=conv4_flat, units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, activation = tf.nn.softmax, units=class_count, name='fc2')
@@ -167,7 +167,7 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.float32, shape=[BATCH_SIZE,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+        x = tf.placeholder(tf.float32, shape=[-1 ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
         x_image = tf.map_fn(tf.image.per_image_standardization, x)
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])

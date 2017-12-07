@@ -25,7 +25,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('log-frequency', 100,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 100,
+tf.app.flags.DEFINE_integer('flush-frequency', 200,
                             'Number of steps between flushing summary results. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('save-model-frequency', 200,
                             'Number of steps between model saves. (default: %(default)d)')
@@ -138,7 +138,7 @@ def deepnn(x_image, class_count=43):
     )
     conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax, units=1024, name='fc1')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
     return logits
 
@@ -167,7 +167,7 @@ def main(_):
         global_step = tf.Variable(0, trainable=False)  # this will be incremented automatically by tensorflow
         decayed_learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step,
                                                            decay_steps, decay_rate, staircase=True)
-        train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
+        train_step = tf.train.AdamOptimizer(decayed_learning_rate).minimize(cross_entropy, global_step=global_step)
 
     loss_summary = tf.summary.scalar("Loss", cross_entropy)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)

@@ -174,7 +174,10 @@ def main(_):
         train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
         '''
         learning_rate = tf.placeholder(tf.float32, shape=[])
-        train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cross_entropy)
+        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
+        train_step_temp = optimizer.compute_gradients(cross_entropy)
+        train_step = optimizer.apply_gradients(train_step_temp)
+        print('Train step : {}'.format(train_step))
         
         
     loss_summary = tf.summary.scalar("Loss", cross_entropy)

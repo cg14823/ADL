@@ -142,8 +142,8 @@ def deepnn(x_image, class_count=43):
     )
     conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.log_softmax, units=1024, name='fc1')
-    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=1024, name='fc1')
+    logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
     return logits
 
 def main(_):
@@ -161,7 +161,7 @@ def main(_):
         logits = deepnn(x_image)
         model = CallableModelWrapper(deepnn, 'logits')
 
-        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
+        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
 
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')

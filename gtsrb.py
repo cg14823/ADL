@@ -134,7 +134,7 @@ def deepnn(x_image, class_count=43):
         use_bias=False,
         name='conv4'
     )
-    conv4_flat = tf.reshape(conv4, [BATCH_SIZE,64*IMG_CHANNELS], name='conv4_flattened')
+    conv4_flat = tf.reshape(conv4, [BATCH_SIZE,64], name='conv4_flattened')
 
     fc1 = tf.layers.dense(inputs=conv4_flat, units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, activation = tf.nn.softmax, units=class_count, name='fc2')

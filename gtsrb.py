@@ -165,17 +165,21 @@ def main(_):
 
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
-
+        '''
         decay_steps = 1000  # decay the learning rate every 1000 steps
         decay_rate = 0.0001  # the base of our exponential for the decay
         global_step = tf.Variable(0, trainable=False)  # this will be incremented automatically by tensorflow
         decayed_learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step,
                                                            decay_steps, decay_rate, staircase=True)
         train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
+        '''
+        learning_rate = tf.placeholder(tf.float32, shape=[])
+        train_step = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cross_entropy)
+        
         
     loss_summary = tf.summary.scalar("Loss", cross_entropy)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
-    learning_rate_summary = tf.summary.scalar("Learning Rate", decayed_learning_rate)
+    learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary, img_summary])
@@ -189,12 +193,13 @@ def main(_):
         validation_writer = tf.summary.FileWriter(run_log_dir + "_validation", sess.graph)
 
         sess.run(tf.global_variables_initializer())
-
+        prevValidationAcc = 0
+        learningRate = 0.01
         # Training and validation
         for step in range(0, FLAGS.max_steps, 1):
-            for (train_images, train_labels) in batch_generator(data_set, 'train'):
+            for (train_images, train_labels) in batch_generator(data_set, 'train'):               
                 _, train_summary_str = sess.run([train_step, train_summary],
-                                                feed_dict={x: train_images, y_: train_labels})
+                                                feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:
@@ -208,6 +213,10 @@ def main(_):
                     validation_steps += 1
                     validation_writer.add_summary(validation_summary_str, step)
                 valid_acc = valid_acc_tmp/validation_steps
+                if valid_acc <= prevValidationAcc:
+                    learningRate = learningRate/10
+                    print('Learning Rate decreased')
+                prevValidationAcc = valid_acc
                 print('step {}, accuracy on validation set : {}'.format(step, valid_acc))
 
             # Save the model checkpoint periodically.

@@ -167,7 +167,7 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.float32, shape=[-1 ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+        x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
         x_image = tf.map_fn(tf.image.per_image_standardization, x)
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])

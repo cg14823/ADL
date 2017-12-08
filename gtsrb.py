@@ -48,6 +48,10 @@ checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 # limit the process memory to a third of the total gpu memory
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.33)
 
+def weight_variable(shape):
+    '''weight_variable generates a weight variable of a given shape.'''
+    initial = tf.truncated_normal(shape, stddev=0.5)
+    return tf.Variable(initial, name='weights')
 
 def deepnn(x_image, class_count=43):
     """deepnn builds the graph for a deep net for classifying CIFAR10 images.
@@ -57,14 +61,51 @@ def deepnn(x_image, class_count=43):
             (i.e. a batch of images conforming to the shape specified in ``img_shape``)
         class_count: number of classes in dataset
 
-    Returns: A tensor of shape (N_examples, 10), with values equal to the logits of
-      classifying the object images into one of 10 classes
-      (airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck)
+    Returns: A tensor of shape (N_examples, 43), with values equal to the logits of
+      classifying the object images into one of 43 classes
     """
     # pad the inputs to the convloution layer
     # padding = tf.constant([2,2],[2,2])
     # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
+
+    with tf.variable_scope('Conv_1'):
+        W_conv1 = weight_variable([5, 5, FLAGS.img_channels, 32])
+        h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME', name='conv1'))
+
+        # Pooling layer - downsamples by 2X.
+        h_pool1 = tf.nn.avg_pool(h_conv1, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling1')
+
+    with tf.variable_scope('Conv_2'):
+        # Second convolutional layer -- maps 32 feature maps to 32.
+        W_conv2 = weight_variable([5, 5, 32, 32])
+        h_conv2 = tf.nn.relu(tf.nn.conv2d(h_pool1, W_conv2, strides=[1, 1, 1, 1], padding='SAME', name='conv2'))
+
+        # Second pooling layer.
+        h_pool2 = tf.nn.avg_pool(h_conv2, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling2')
+
+    with tf.variable_scope('Conv_3'):
+        # Second convolutional layer -- maps 32 feature maps to 64.
+        W_conv3 = weight_variable([5, 5, 32, 64])
+        h_conv3 = tf.nn.relu(tf.nn.conv2d(h_pool2, W_conv3, strides=[1, 1, 1, 1], padding='SAME', name='conv3'))
+
+        # Second pooling layer.
+        h_pool3 = tf.nn.max_pool(h_conv3, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling3')
+
+    with tf.variable_scope('Conv_4'):
+        # Second convolutional layer -- maps 64 feature maps to 64.
+        W_conv4 = weight_variable([4, 4, 64, 64])
+        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='SAME', name='conv4'))
+
+    with tf.variable_scope('FC_1'):
+        # Fully connected layer 1 -- after 2 round of downsampling, our 28x28
+        # image is down to 8x8x64 feature maps -- maps this to 1024 features.
+        W_fc1 = weight_variable([64, 43])
+
+        h_conv4_flat = tf.reshape(h_conv4, [-1, 64])
+        return h_fc1 = tf.nn.relu(tf.matmul(h_conv4_flat, W_fc1))
+
+    '''
     conv1 = tf.layers.conv2d(
         inputs=x_image,
         filters=32,
@@ -145,6 +186,7 @@ def deepnn(x_image, class_count=43):
     fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
     return logits
+    '''
 
 
 

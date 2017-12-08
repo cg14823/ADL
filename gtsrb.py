@@ -164,21 +164,19 @@ def main(_):
         model = CallableModelWrapper(deepnn, 'logits')
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         def logLoss(logitIn,classTen):
-            val5 = tf.argmax(classTen, 1)
+            val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
             val3 = tf.log(val2)
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
-        #cross_entropy_temp = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
-        val0 = tf.argmax(y_, 1)
-        #not_cross_entropy = tf.map_fn(logLoss,logits)
-        #indsIn = tf.range([0,100,1])
+        #cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
+
         not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        
+        our_loss = tf.reduce_mean(not_cross_entropy)
+
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
         decay_steps = 1000  # decay the learning rate every 1000 steps
@@ -190,11 +188,12 @@ def main(_):
         '''
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
-        train_step_temp = optimizer.compute_gradients(cross_entropy)
-        train_step = optimizer.apply_gradients(train_step_temp)
+        train_step = optimizer.minimize(our_loss)
+        #train_step_temp = optimizer.compute_gradients(our_loss)
+        #train_step = optimizer.apply_gradients(train_step_temp)
         
         
-    loss_summary = tf.summary.scalar("Loss", cross_entropy)
+    loss_summary = tf.summary.scalar("Loss", our_loss)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
@@ -216,13 +215,10 @@ def main(_):
         for step in range(0, FLAGS.max_steps, 1):
             iteration = 1
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
-                _, train_summary_str,logits_out,not_cross_entropy_out,val0_out = sess.run([train_step, train_summary,logits,not_cross_entropy,val0],
+                _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print('Train Iter {} : '.format(iteration))
-                print(not_cross_entropy_out)
-                print(np.shape(not_cross_entropy_out))
-                print(np.shape(val0))
-                print('+----------------------------------+')
+                #print('Train Iter {} : '.format(iteration))
+                #print('+----------------------------------+')
                 iteration += 1
 
                 # Validation: Monitoring accuracy using validation set

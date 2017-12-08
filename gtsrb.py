@@ -255,10 +255,11 @@ def main(_):
         step = 0
         while step < FLAGS.max_steps:
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
-                _, train_summary_str = sess.run([train_step, train_summary],
+                _, train_summary_str = sess.run([train_step, train_summary,logits],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                #print('Train Iter {} : '.format(iteration))
-                #print('+----------------------------------+')
+                print('Train Iter {} : '.format(iteration))
+                print(np.shape(logits))
+                print('+----------------------------------+')
                 step += 1
 
                     # Validation: Monitoring accuracy using validation set

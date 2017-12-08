@@ -103,7 +103,7 @@ def deepnn(x_image, class_count=43):
         W_fc1 = weight_variable([64, 43])
 
         h_conv4_flat = tf.reshape(h_conv4, [-1, 64])
-        return h_fc1 = tf.nn.relu(tf.matmul(h_conv4_flat, W_fc1))
+        return tf.nn.relu(tf.matmul(h_conv4_flat, W_fc1))
 
     '''
     conv1 = tf.layers.conv2d(

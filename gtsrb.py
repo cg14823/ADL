@@ -170,13 +170,13 @@ def main(_):
             val3 = tf.log(val2)
             val6 = tf.gather(logitIn,val5)
             
-            
             return tf.subtract(val3,val6)
         cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
         #cross_entropy_temp = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
         val0 = tf.argmax(y_, 1)
         #not_cross_entropy = tf.map_fn(logLoss,logits)
-        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_))
+        #indsIn = tf.range([0,100,1])
+        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
         
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')

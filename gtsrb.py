@@ -146,6 +146,9 @@ def deepnn(x_image, class_count=43):
     logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
     return logits
 
+def logLoss((logitIn,classIn)):
+    return tf.subtract(tf.log(tf.reduce_sum(tf.exp(logitIn)),logitIn[classIn]))
+
 def main(_):
     tf.reset_default_graph()
     data_set = np.load('gtsrb_dataset.npz')
@@ -160,11 +163,15 @@ def main(_):
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
         model = CallableModelWrapper(deepnn, 'logits')
-
-        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
-        #cross_entropy = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
-
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
+        maxClass = tf.argmax(y_, 1)
+        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
+        
+        #cross_entropy_temp = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
+
+        not_cross_entropy = tf.map_fn(logLoss,(logits, maxClass))
+
+        
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
         decay_steps = 1000  # decay the learning rate every 1000 steps
@@ -202,11 +209,11 @@ def main(_):
         for step in range(0, FLAGS.max_steps, 1):
             iteration = 1
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
-                _, train_summary_str,logits_out,cross_entropy_out = sess.run([train_step, train_summary,logits,cross_entropy],
+                _, train_summary_str,logits_out,not_cross_entropy_out = sess.run([train_step, train_summary,logits,not_cross_entropy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print('Train Iter {} : '.format(iteration))
-                print(logits_out.get_shape())
-                print(np.shape(logits_out))
+                print(not_cross_entropy_out)
+                print(np.shape(not_cross_entropy_out))
                 print('+----------------------------------+')
                 iteration += 1
 

@@ -70,7 +70,7 @@ def deepnn(x_image, class_count=43):
     # First convolutional layer - maps one RGB image to 32 feature maps.
 
     with tf.variable_scope('Conv_1'):
-        W_conv1 = weight_variable([5, 5, FLAGS.img_channels, 32])
+        W_conv1 = weight_variable([5, 5, 3, 32])
         h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME', name='conv1'))
 
         # Pooling layer - downsamples by 2X.
@@ -95,7 +95,7 @@ def deepnn(x_image, class_count=43):
     with tf.variable_scope('Conv_4'):
         # Second convolutional layer -- maps 64 feature maps to 64.
         W_conv4 = weight_variable([4, 4, 64, 64])
-        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='SAME', name='conv4'))
+        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
 
     with tf.variable_scope('FC_1'):
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28

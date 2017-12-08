@@ -147,7 +147,11 @@ def deepnn(x_image, class_count=43):
     return logits
 
 def logLoss((logitIn,classIn)):
-    return tf.subtract(tf.log(tf.reduce_sum(tf.exp(logitIn)),logitIn[classIn]))
+    val1 = tf.exp(logitIn)
+    val2 = tf.reduce_sum(val1)
+    val3 = tf.log(val2)
+    val4 = logitIn[classIn]
+    return tf.subtract(val3,val4)
 
 def main(_):
     tf.reset_default_graph()

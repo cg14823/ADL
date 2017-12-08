@@ -205,8 +205,8 @@ def main(_):
                 _, train_summary_str,logits_out,cross_entropy_out = sess.run([train_step, train_summary,logits,cross_entropy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print('Train Iter {} : '.format(iteration))
-                print(tf.shape(logits_out))
-                print(tf.shape(train_labels))
+                print(logits_out.get_shape())
+                print(np.shape(logits_out))
                 print('+----------------------------------+')
                 iteration += 1
 

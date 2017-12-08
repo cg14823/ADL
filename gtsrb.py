@@ -74,7 +74,7 @@ def deepnn(x_image, class_count=43):
         h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME', name='conv1'))
 
         # Pooling layer - downsamples by 2X.
-        h_pool1 = tf.nn.avg_pool(h_conv1, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling1')
+        h_pool1 = tf.nn.avg_pool(h_conv1, ksize=[1, 3, 3, 1],strides=[2, 2, 2, 2], padding='SAME', name='pooling1')
 
     with tf.variable_scope('Conv_2'):
         # Second convolutional layer -- maps 32 feature maps to 32.
@@ -82,7 +82,7 @@ def deepnn(x_image, class_count=43):
         h_conv2 = tf.nn.relu(tf.nn.conv2d(h_pool1, W_conv2, strides=[1, 1, 1, 1], padding='SAME', name='conv2'))
 
         # Second pooling layer.
-        h_pool2 = tf.nn.avg_pool(h_conv2, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling2')
+        h_pool2 = tf.nn.avg_pool(h_conv2, ksize=[1, 3, 3, 1],strides=[2, 2, 2, 2], padding='SAME', name='pooling2')
 
     with tf.variable_scope('Conv_3'):
         # Second convolutional layer -- maps 32 feature maps to 64.
@@ -90,7 +90,7 @@ def deepnn(x_image, class_count=43):
         h_conv3 = tf.nn.relu(tf.nn.conv2d(h_pool2, W_conv3, strides=[1, 1, 1, 1], padding='SAME', name='conv3'))
 
         # Second pooling layer.
-        h_pool3 = tf.nn.max_pool(h_conv3, ksize=[3, 3, 3, 32],strides=[2, 2, 2, 2], padding='SAME', name='pooling3')
+        h_pool3 = tf.nn.max_pool(h_conv3, ksize=[1, 3, 3, 1],strides=[2, 2, 2, 2], padding='SAME', name='pooling3')
 
     with tf.variable_scope('Conv_4'):
         # Second convolutional layer -- maps 64 feature maps to 64.

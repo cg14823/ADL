@@ -159,9 +159,17 @@ def main(_):
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
+        print('LOGITS :')
+        print(logits)
+        print('\nLogits shape : {}'.format(tf.shape(logits)))
+        print('\nY_ : ')
+        print(y_)
         model = CallableModelWrapper(deepnn, 'logits')
 
         cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
+        print('\nCross Entropy : ')
+        print(cross_entropy)
+        #cross_entropy = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
 
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
@@ -241,7 +249,6 @@ def main(_):
             (test_images, test_labels) = test_batch.next()
             temp_acc = sess.run(accuracy, feed_dict={x: test_images, y_: test_labels})
             test_accuracy += temp_acc 
-
             batch_count += 1
             evaluated_images += test_labels.shape[0]
 

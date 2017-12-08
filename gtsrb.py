@@ -103,9 +103,10 @@ def deepnn(x_image, class_count=43):
         h_conv4 = tf.layers.dense(inputs=h_pool3, activation=tf.nn.relu,units= 64, name='conv4')
     '''
     with tf.variable_scope('FC_1'):
+        h_conv4_flat = tf.reshape(h_conv4,[-1,64])
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28
         # image is down to 8x8x64 feature maps -- maps this to 1024 features.
-        logits = tf.layers.dense(inputs=h_conv4,units = 43,name='fc1')
+        logits = tf.layers.dense(inputs=h_conv4_flat,units = 43,name='fc1')
         return logits
 
     '''
@@ -260,13 +261,10 @@ def main(_):
         step = 0
         while step < FLAGS.max_steps:
             for (train_images, train_labels) in batch_generator(data_set, 'train'):
-                logits = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits)))         
-                _, train_summary_str = sess.run([train_step, train_summary,logits],
+                logits_out = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits_out)))         
+                _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print('Train Iter {} : '.format(iteration))
-                print(np.shape(logits))
-                print('+----------------------------------+')
                 step += 1
 
                     # Validation: Monitoring accuracy using validation set

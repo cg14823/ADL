@@ -206,7 +206,7 @@ def main(_):
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print('Train Iter {} : '.format(iteration))
                 print(tf.shape(logits_out))
-                print(tf.shape(train_labels)
+                print(tf.shape(train_labels))
                 print('+----------------------------------+')
                 iteration += 1
 

@@ -260,9 +260,7 @@ def main(_):
         # Training and validation
         step = 0
         while step < FLAGS.max_steps:
-            for (train_images, train_labels) in batch_generator(data_set, 'train'):
-                logits_out = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits_out)))         
+            for (train_images, train_labels) in batch_generator(data_set, 'train'):      
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 step += 1

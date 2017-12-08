@@ -163,19 +163,19 @@ def main(_):
         logits = deepnn(x_image)
         model = CallableModelWrapper(deepnn, 'logits')
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
-        
+        def logLoss(logitIn):
+            val5 = tf.argmax(y_, 1)
+            val1 = tf.exp(logitIn)
+            val2 = tf.reduce_sum(val1)
+            val3 = tf.log(val2)
+            val6 = tf.gather(logitIn,val5)
+            
+            return tf.subtract(val3,val6)
         cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
         #cross_entropy_temp = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
         val0 = tf.argmax(y_, 1)
         not_cross_entropy = tf.map_fn(logLoss,logits)
-        def logLoss(logitIn):
-            val0 = tf.argmax(y_, 1)
-            val1 = tf.exp(logitIn)
-            val2 = tf.reduce_sum(val1)
-            val3 = tf.log(val2)
-            val4 = logitIn[val0]
-            
-            return tf.subtract(val3,val4)
+
         
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''

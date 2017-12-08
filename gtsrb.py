@@ -93,9 +93,8 @@ def deepnn(x_image, class_count=43):
         h_pool3 = tf.nn.max_pool(h_conv3, ksize=[1, 3, 3, 1],strides=[1, 2, 2, 1], padding='SAME', name='pooling3')
 
     with tf.variable_scope('Conv_4'):
-        h_pool3_flat = tf.reshape(h_pool4, [-1, 64])
         # Second convolutional layer -- maps 64 feature maps to 64.
-        h_conv4 = tf.layers.dense(inputs=h_pool3, activation=tf.nn.relu,units= 64, name='conv4')
+        h_conv4 = tf.layers.dense(inputs=h_pool3_flat, activation=tf.nn.relu,units= 64, name='conv4')
 
     with tf.variable_scope('FC_1'):
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28

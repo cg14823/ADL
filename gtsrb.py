@@ -77,7 +77,6 @@ def deepnn(x_image, class_count=43):
         name='conv1'
     )
 
-    #Pad again?
     pool1 = tf.layers.average_pooling2d(
         inputs=conv1,
         pool_size=[3, 3],
@@ -86,7 +85,6 @@ def deepnn(x_image, class_count=43):
         padding='same'
     )
 
-    #Pad again?
     conv2 = tf.layers.conv2d(
         inputs=pool1,
         filters=32,
@@ -99,7 +97,7 @@ def deepnn(x_image, class_count=43):
         name='conv2'
     )
 
-    #Pad again?
+
     pool2 = tf.layers.average_pooling2d(
         inputs=conv2,
         pool_size=[3, 3],
@@ -108,7 +106,7 @@ def deepnn(x_image, class_count=43):
         padding='same'
     )
 
-    #Pad again?
+
     conv3 = tf.layers.conv2d(
         inputs=pool2,
         filters=64,
@@ -142,7 +140,7 @@ def deepnn(x_image, class_count=43):
     )
     conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=1024, name='fc1')
+    fc1 = tf.layers.dense(inputs=conv4_flat, units=1024, name='fc1')
     logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
     return logits
 
@@ -163,6 +161,8 @@ def main(_):
         logits = deepnn(x_image)
         model = CallableModelWrapper(deepnn, 'logits')
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
+
+        
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
@@ -175,7 +175,7 @@ def main(_):
 
         not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        our_loss = tf.reduce_mean(not_cross_entropy)
+        our_loss = tf.reduce_mean(not_cross_entropy) # we believe this is the value our network should try and minimize
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -233,7 +233,9 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
+
                     if valid_acc <= prevValidationAcc:
+                        # decrease the learning rate when accuracy does not improve as  the paper sats
                         learningRate = learningRate/10
                         print('Learning Rate decreased')
                     prevValidationAcc = valid_acc

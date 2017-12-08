@@ -159,16 +159,9 @@ def main(_):
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
-        print('LOGITS :')
-        print(logits)
-        print('\nLogits shape : {}'.format(tf.shape(logits)))
-        print('\nY_ : ')
-        print(y_)
         model = CallableModelWrapper(deepnn, 'logits')
 
         cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
-        print('\nCross Entropy : ')
-        print(cross_entropy)
         #cross_entropy = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
 
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
@@ -185,7 +178,6 @@ def main(_):
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
         train_step_temp = optimizer.compute_gradients(cross_entropy)
         train_step = optimizer.apply_gradients(train_step_temp)
-        print('Train step : {}'.format(train_step))
         
         
     loss_summary = tf.summary.scalar("Loss", cross_entropy)
@@ -209,8 +201,11 @@ def main(_):
         # Training and validation
         for step in range(0, FLAGS.max_steps, 1):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
-                _, train_summary_str = sess.run([train_step, train_summary],
+                _, train_summary_str,logits_out,cross_entropy_out = sess.run([train_step, train_summary,logits,cross_entropy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                print(logits_out)
+                print(cross_entropy_out)
+                print(train_labels)
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:

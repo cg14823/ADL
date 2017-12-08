@@ -146,16 +146,7 @@ def deepnn(x_image, class_count=43):
     logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
     return logits
 
-def logLoss((logitIn,classIn)):
-    print(logitIn)
-    print(classIn)
-    val0 = tf.argmax(classIn, 1)
-    val1 = tf.exp(logitIn)
-    val2 = tf.reduce_sum(val1)
-    val3 = tf.log(val2)
-    val4 = logitIn[val0]
-    
-    return tf.subtract(val3,val4)
+
 
 def main(_):
     tf.reset_default_graph()
@@ -174,11 +165,17 @@ def main(_):
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         
         cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
-        
         #cross_entropy_temp = tf.subtract(tf.log(tf.reduce_sum(tf.exp(logits)),logits))
-
-        not_cross_entropy = tf.map_fn(logLoss,(logits, y_))
-
+        val0 = tf.argmax(y_, 1)
+        not_cross_entropy = tf.map_fn(logLoss,logits)
+        def logLoss(logitIn):
+            val0 = tf.argmax(y_, 1)
+            val1 = tf.exp(logitIn)
+            val2 = tf.reduce_sum(val1)
+            val3 = tf.log(val2)
+            val4 = logitIn[val0]
+            
+            return tf.subtract(val3,val4)
         
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -217,11 +214,12 @@ def main(_):
         for step in range(0, FLAGS.max_steps, 1):
             iteration = 1
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
-                _, train_summary_str,logits_out,not_cross_entropy_out = sess.run([train_step, train_summary,logits,not_cross_entropy],
+                _, train_summary_str,logits_out,not_cross_entropy_out,val0_out = sess.run([train_step, train_summary,logits,not_cross_entropy,val0],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print('Train Iter {} : '.format(iteration))
                 print(not_cross_entropy_out)
                 print(np.shape(not_cross_entropy_out))
+                print(np.shape(val0))
                 print('+----------------------------------+')
                 iteration += 1
 

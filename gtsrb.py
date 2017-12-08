@@ -95,7 +95,7 @@ def deepnn(x_image, class_count=43):
     with tf.variable_scope('Conv_4'):
         # Second convolutional layer -- maps 32 feature maps to 64.
         W_conv4 = weight_variable([4, 4, 64, 64])
-        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv3, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
+        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
 
     '''
     with tf.variable_scope('Conv_4'):
@@ -252,7 +252,9 @@ def main(_):
 
         train_writer = tf.summary.FileWriter(run_log_dir + "_train", sess.graph)
         validation_writer = tf.summary.FileWriter(run_log_dir + "_validation", sess.graph)
-
+        logits = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+        
+        print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits)))
         sess.run(tf.global_variables_initializer())
         prevValidationAcc = 0
         learningRate = 0.01

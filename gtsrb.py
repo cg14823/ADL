@@ -94,8 +94,7 @@ def deepnn(x_image, class_count=43):
 
     with tf.variable_scope('Conv_4'):
         # Second convolutional layer -- maps 64 feature maps to 64.
-        W_conv4 = weight_variable([4, 4, 64, 64])
-        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
+        h_conv4 = tf.nn.relu(tf.layers.dense(h_pool3, 64, name='conv4'))
 
     with tf.variable_scope('FC_1'):
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28

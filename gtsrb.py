@@ -200,14 +200,15 @@ def main(_):
         learningRate = 0.01
         # Training and validation
         for step in range(0, FLAGS.max_steps, 1):
+            iteration = 1
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
                 _, train_summary_str,logits_out,cross_entropy_out = sess.run([train_step, train_summary,logits,cross_entropy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print('Train Iter 1 : ')
-                print(logits_out)
-                print(cross_entropy_out)
-                print(train_labels)
+                print('Train Iter {} : '.format(iteration))
+                print(tf.shape(logits_out))
+                print(tf.shape(train_labels)
                 print('+----------------------------------+')
+                iteration += 1
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:

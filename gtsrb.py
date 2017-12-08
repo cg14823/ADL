@@ -203,9 +203,11 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):               
                 _, train_summary_str,logits_out,cross_entropy_out = sess.run([train_step, train_summary,logits,cross_entropy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                print('Train Iter 1 : ')
                 print(logits_out)
                 print(cross_entropy_out)
                 print(train_labels)
+                print('+----------------------------------+')
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:

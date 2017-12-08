@@ -252,16 +252,16 @@ def main(_):
 
         train_writer = tf.summary.FileWriter(run_log_dir + "_train", sess.graph)
         validation_writer = tf.summary.FileWriter(run_log_dir + "_validation", sess.graph)
-        logits = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-        
-        print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits)))
+
         sess.run(tf.global_variables_initializer())
         prevValidationAcc = 0
         learningRate = 0.01
         # Training and validation
         step = 0
         while step < FLAGS.max_steps:
-            for (train_images, train_labels) in batch_generator(data_set, 'train'):               
+            for (train_images, train_labels) in batch_generator(data_set, 'train'):
+                logits = sess.run([logits],feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                print('\n\n\n\n\nLOGITS SHAPE : {}\n\n\n\n\n'.format(np.shape(logits)))         
                 _, train_summary_str = sess.run([train_step, train_summary,logits],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print('Train Iter {} : '.format(iteration))

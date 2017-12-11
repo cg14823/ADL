@@ -208,7 +208,7 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
         #not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
@@ -249,38 +249,37 @@ def main(_):
         prevValidationAcc = 0
         learningRate = 0.01
         # Training and validation
-        step = 0
-        while step < FLAGS.max_steps:
+        for step in range(FLAGS.max_steps,1):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):      
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                step += 1
-
-                    # Validation: Monitoring accuracy using validation set
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
-                    valid_acc_tmp = 0
-                    validation_steps = 0
-                    for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                            feed_dict={x: test_images, y_: test_labels})
-                        valid_acc_tmp += validation_accuracy
-                        validation_steps += 1
-                        validation_writer.add_summary(validation_summary_str, step)
-                    valid_acc = valid_acc_tmp/validation_steps
-                    if valid_acc <= prevValidationAcc:
-                        learningRate = learningRate/10
-                        print('Learning Rate decreased')
-                    prevValidationAcc = valid_acc
-                    print('step {}, accuracy on validation set : {}'.format(step, valid_acc))
 
-                # Save the model checkpoint periodically.
-                if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
-                    saver.save(sess, checkpoint_path, global_step=step)
+                # Validation: Monitoring accuracy using validation set
+            if step % FLAGS.log_frequency == 0:
+                valid_acc_tmp = 0
+                validation_steps = 0
+                for (test_images, test_labels) in batch_generator(data_set, 'test'):
+                    validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                                                                        feed_dict={x: test_images, y_: test_labels})
+                    valid_acc_tmp += validation_accuracy
+                    validation_steps += 1
+                    validation_writer.add_summary(validation_summary_str, step)
+                valid_acc = valid_acc_tmp/validation_steps
+                if valid_acc <= prevValidationAcc:
+                    learningRate = learningRate/10
+                    print('Learning Rate decreased')
+                prevValidationAcc = valid_acc
+                print('step {}, accuracy on validation set : {}'.format(step, valid_acc))
 
-                if step % FLAGS.flush_frequency == 0:
-                    train_writer.flush()
-                    validation_writer.flush()
+            # Save the model checkpoint periodically.
+            if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
+                saver.save(sess, checkpoint_path, global_step=step)
+
+            if step % FLAGS.flush_frequency == 0:
+                train_writer.flush()
+                validation_writer.flush()
 
         # Resetting the internal batch indexes
         test_batch = batch_generator(data_set,'test')

@@ -68,7 +68,7 @@ def deepnn(x_image, class_count=43):
     # padding = tf.constant([2,2],[2,2])
     # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
-
+    '''
     with tf.variable_scope('Conv_1'):
         W_conv1 = weight_variable([5, 5, 3, 32])
         h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME', name='conv1'))
@@ -97,11 +97,11 @@ def deepnn(x_image, class_count=43):
         W_conv4 = weight_variable([4, 4, 64, 64])
         h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
 
-    '''
+
     with tf.variable_scope('Conv_4'):
         # Second convolutional layer -- maps 64 feature maps to 64.
         h_conv4 = tf.layers.dense(inputs=h_pool3, activation=tf.nn.relu,units= 64, name='conv4')
-    '''
+    
     with tf.variable_scope('FC_1'):
         h_conv4_flat = tf.reshape(h_conv4,[-1,64])
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28
@@ -113,20 +113,18 @@ def deepnn(x_image, class_count=43):
     conv1 = tf.layers.conv2d(
         inputs=x_image,
         filters=32,
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
-        strides=(1,1),
         kernel_size=[5, 5],
         padding='same',
-        activation=tf.nn.relu,
         use_bias=False,
         name='conv1'
     )
+    conv1_relu = tf.nn.relu(conv1)
 
     #Pad again?
     pool1 = tf.layers.average_pooling2d(
-        inputs=conv1,
+        inputs=conv1_relu,
         pool_size=[3, 3],
-        strides=(2,2),
+        strides=2,
         name='pool1',
         padding='same'
     )
@@ -135,20 +133,18 @@ def deepnn(x_image, class_count=43):
     conv2 = tf.layers.conv2d(
         inputs=pool1,
         filters=32,
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[5, 5],
         padding='same',
-        strides=(1,1),
-        activation=tf.nn.relu,
         use_bias=False,
         name='conv2'
     )
+    conv2_relu = tf.nn.relu(conv2)
 
     #Pad again?
     pool2 = tf.layers.average_pooling2d(
-        inputs=conv2,
+        inputs=conv2_relu,
         pool_size=[3, 3],
-        strides=(2,2),
+        strides=2,
         name='pool2',
         padding='same'
     )
@@ -157,19 +153,17 @@ def deepnn(x_image, class_count=43):
     conv3 = tf.layers.conv2d(
         inputs=pool2,
         filters=64,
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[5, 5],
         padding='same',
-        strides=(1,1),
-        activation=tf.nn.relu,
         use_bias=False,
         name='conv3'
     )
+    conv3_relu = tf.nn.relu(conv3)
 
     pool3 = tf.layers.max_pooling2d(
-        inputs=conv3,
+        inputs=conv3_relu,
         pool_size=[3, 3],
-        strides=(2,2),
+        strides=2,
         name='pool3',
         padding='same'
     )
@@ -177,20 +171,17 @@ def deepnn(x_image, class_count=43):
     conv4 = tf.layers.conv2d(
         inputs=pool3,
         filters=64,
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_size=[4, 4],
         padding='valid',
-        strides=(1,1),
-        activation=tf.nn.relu,
         use_bias=False,
         name='conv4'
     )
-    conv4_flat = tf.reshape(conv4, [-1,64], name='conv4_flattened')
+    conv4_relu = tf.nn.relu(conv4)
+    conv4_flat = tf.reshape(conv4_relu, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=1024, name='fc1')
-    logits = tf.layers.dense(inputs=fc1, activation=tf.nn.softmax, units=class_count, name='fc2')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1')
+    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
     return logits
-    '''
 
 
 
@@ -239,7 +230,7 @@ def main(_):
         #train_step = optimizer.apply_gradients(train_step_temp)
         
         
-    loss_summary = tf.summary.scalar("Loss", our_loss)
+    loss_summary = tf.summary.scalar("Loss", cross_entropy)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)

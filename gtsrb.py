@@ -22,12 +22,12 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 1,
+tf.app.flags.DEFINE_integer('log-frequency', 10,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 5,
+tf.app.flags.DEFINE_integer('flush-frequency', 50,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 10,
+tf.app.flags.DEFINE_integer('save-model-frequency', 100,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
@@ -234,6 +234,7 @@ def main(_):
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
+    in_summary = tf.summary.image('Pre Whitening Images', x)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary, img_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary])
@@ -249,41 +250,45 @@ def main(_):
         prevValidationAcc = 0
         learningRate = 0.01
         # Training and validation
-        for step in range(0,FLAGS.max_steps,1):
-            print('Step {}'.format(step))
-            for (train_images, train_labels) in batch_generator(data_set, 'train'):      
+        step = 0
+        while step < FLAGS.max_steps:
+            
+            for (train_images, train_labels) in batch_generator(data_set, 'train'):  
+                print('Step {}'.format(step))    
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
                 # Validation: Monitoring accuracy using validation set
-            if step % FLAGS.log_frequency == 0:
-                print('Validating...')
-                valid_acc_tmp = 0
-                validation_steps = 0
-                for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                    validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                        feed_dict={x: test_images, y_: test_labels})
-                    valid_acc_tmp += validation_accuracy
-                    validation_steps += 1
-                    validation_writer.add_summary(validation_summary_str, step)
-                valid_acc = valid_acc_tmp/validation_steps
-                if valid_acc <= prevValidationAcc:
-                    learningRate = learningRate/10
-                    print('Learning Rate decreased')
-                prevValidationAcc = valid_acc
-                print('Step {}, accuracy on validation set : {}'.format(step, valid_acc))
-		    
-            # Save the model checkpoint periodically.
-            if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
-                saver.save(sess, checkpoint_path, global_step=step)
+                if step % FLAGS.log_frequency == 0:
+                    print('Validating...')
+                    valid_acc_tmp = 0
+                    validation_steps = 0
+                    for (test_images, test_labels) in batch_generator(data_set, 'test'):
+                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                                                                            feed_dict={x: test_images, y_: test_labels})
+                        valid_acc_tmp += validation_accuracy
+                        validation_steps += 1
+                        validation_writer.add_summary(validation_summary_str, step)
+                    valid_acc = valid_acc_tmp/validation_steps
+                    if valid_acc <= prevValidationAcc:
+                        learningRate = learningRate/10
+                        print('Learning Rate decreased')
+                    prevValidationAcc = valid_acc
+                    print('Step {}, accuracy on validation set : {}'.format(step, valid_acc))
+                
+                # Save the model checkpoint periodically.
+                if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
+                    saver.save(sess, checkpoint_path, global_step=step)
 
-            if step % FLAGS.flush_frequency == 0:
-                train_writer.flush()
-                validation_writer.flush()
-            if valid_acc > 0.9:
-                break
+                if step % FLAGS.flush_frequency == 0:
+                    train_writer.flush()
+                    validation_writer.flush()
+                if valid_acc > 0.9:
+                    step = FLAGS.max_steps
+                    break
+                step += 1
         # Resetting the internal batch indexes
         test_batch = batch_generator(data_set,'test')
         evaluated_images = 0

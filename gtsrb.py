@@ -272,9 +272,9 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    if valid_acc <= prevValidationAcc:
-                        learningRate = learningRate/10
-                        print('Learning Rate decreased')
+                    #if valid_acc <= prevValidationAcc:
+                        #learningRate = learningRate/10
+                        #print('Learning Rate decreased')
                     prevValidationAcc = valid_acc
                     print('Step {}, accuracy on validation set : {}'.format(step, valid_acc))
                 

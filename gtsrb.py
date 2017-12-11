@@ -294,9 +294,7 @@ def main(_):
         test_accuracy = 0
         batch_count = 0
 
-        while evaluated_images != data_set['X_test'].shape[0]:
-            # Don't loop back when we reach the end of the test set
-            (test_images, test_labels) = test_batch.next()
+        for (test_images, test_labels) in batch_generator(data_set, 'test'):
             temp_acc = sess.run(accuracy, feed_dict={x: test_images, y_: test_labels})
             test_accuracy += temp_acc 
             batch_count += 1

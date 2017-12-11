@@ -249,7 +249,8 @@ def main(_):
         prevValidationAcc = 0
         learningRate = 0.01
         # Training and validation
-        for step in range(FLAGS.max_steps,1):
+        for step in range(0,FLAGS.max_steps,1):
+            print('Step {}'.format(step))
             for (train_images, train_labels) in batch_generator(data_set, 'train'):      
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
@@ -258,6 +259,7 @@ def main(_):
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:
+                print('Validating...')
                 valid_acc_tmp = 0
                 validation_steps = 0
                 for (test_images, test_labels) in batch_generator(data_set, 'test'):

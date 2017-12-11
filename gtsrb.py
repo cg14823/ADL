@@ -217,11 +217,11 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        #cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
+        cross_entropy = tf.reduce_mean(tf.negative(tf.log(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))))
 
-        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
+        #not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        our_loss = tf.reduce_mean(not_cross_entropy)
+        #our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -234,7 +234,7 @@ def main(_):
         '''
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
-        train_step = optimizer.minimize(our_loss)
+        train_step = optimizer.minimize(cross_entropy)
         #train_step_temp = optimizer.compute_gradients(our_loss)
         #train_step = optimizer.apply_gradients(train_step_temp)
         

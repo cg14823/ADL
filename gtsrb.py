@@ -22,12 +22,12 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 10,
+tf.app.flags.DEFINE_integer('log-frequency', 1,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 50,
+tf.app.flags.DEFINE_integer('flush-frequency', 5,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 100,
+tf.app.flags.DEFINE_integer('save-model-frequency', 10,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
@@ -251,11 +251,15 @@ def main(_):
         # Training and validation
         for step in range(0,FLAGS.max_steps,1):
             print('Step {}'.format(step))
+	    incVal = 0
             for (train_images, train_labels) in batch_generator(data_set, 'train'):      
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
+		if incVal % 39 == 0:
+		    print(incVal)
+		incVal += 1
 
                 # Validation: Monitoring accuracy using validation set
             if step % FLAGS.log_frequency == 0:
@@ -274,7 +278,7 @@ def main(_):
                     print('Learning Rate decreased')
                 prevValidationAcc = valid_acc
                 print('step {}, accuracy on validation set : {}'.format(step, valid_acc))
-
+		    
             # Save the model checkpoint periodically.
             if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
                 saver.save(sess, checkpoint_path, global_step=step)
@@ -282,7 +286,8 @@ def main(_):
             if step % FLAGS.flush_frequency == 0:
                 train_writer.flush()
                 validation_writer.flush()
-
+	    if valid_acc > 0.9:
+		break
         # Resetting the internal batch indexes
         test_batch = batch_generator(data_set,'test')
         evaluated_images = 0

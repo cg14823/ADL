@@ -7,7 +7,6 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from cleverhans.model import CallableModelWrapper
 import cPickle as pickle
 
 
@@ -204,7 +203,6 @@ def main(_):
 
     with tf.variable_scope('model'):
         logits = deepnn(x_image)
-        model = CallableModelWrapper(deepnn, 'logits')
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)

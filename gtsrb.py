@@ -111,13 +111,15 @@ def deepnn(x_image, class_count=43):
         return logits
 
     '''
+    
     conv1 = tf.layers.conv2d(
         inputs=x_image,
         filters=32,
         kernel_size=[5, 5],
         padding='same',
         use_bias=False,
-        name='conv1'
+        name='conv1',
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
     )
     conv1_relu = tf.nn.relu(conv1)
 
@@ -137,7 +139,8 @@ def deepnn(x_image, class_count=43):
         kernel_size=[5, 5],
         padding='same',
         use_bias=False,
-        name='conv2'
+        name='conv2',
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
     )
     conv2_relu = tf.nn.relu(conv2)
 
@@ -157,7 +160,8 @@ def deepnn(x_image, class_count=43):
         kernel_size=[5, 5],
         padding='same',
         use_bias=False,
-        name='conv3'
+        name='conv3',
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
     )
     conv3_relu = tf.nn.relu(conv3)
 
@@ -175,13 +179,14 @@ def deepnn(x_image, class_count=43):
         kernel_size=[4, 4],
         padding='valid',
         use_bias=False,
-        name='conv4'
+        name='conv4',
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
     )
     conv4_relu = tf.nn.relu(conv4)
     conv4_flat = tf.reshape(conv4_relu, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1')
-    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2')
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
+    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
     return logits
 
 
@@ -302,7 +307,7 @@ def main(_):
             test_writer.add_summary(test_sum_out, batch_count)
             test_accuracy += temp_acc 
             batch_count += 1
-            evaluated_images += test_labels.shape[0]
+            evaluated_images += np.shape(test_labels)[0]
 
         test_accuracy = test_accuracy / batch_count
         test_writer.flush()

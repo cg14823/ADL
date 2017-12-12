@@ -240,7 +240,6 @@ def main(_):
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary])
     test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary])
-    trained_variables = tf.trainable_variables()
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer())
@@ -258,8 +257,6 @@ def main(_):
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 print('Step {}'.format(step))
-                trained_variables_out = sess.run(trained_variables,feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print(trained_variables_out)
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:

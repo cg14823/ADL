@@ -273,10 +273,14 @@ def main(_):
                         validation_accuracy, validation_summary_str,logits_out,correct_prediction_out = sess.run([accuracy, validation_summary,logits,correct_prediction],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
+                        if valid_acc_tmp < 0.01:
+                            print(valid_acc_tmp)
                         if valid_acc_tmp < 0.005:
-                            print(np.shape(logits_out))
-                            print(np.shape(correct_prediction_out))
-                            print(correct_prediction_out)
+                            np.savez("images.npz",test_images)
+                            np.savez("labels.npz",test_labels)
+                            np.savez("logits.npz",logits_out)
+                            np.savez("preds.npz",correct_prediction_out)
+                            raw_input("BAD VAL")
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps

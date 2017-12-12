@@ -266,7 +266,6 @@ def main(_):
 
                 # Validation: Monitoring accuracy using validation set
                 if step % FLAGS.log_frequency == 0:
-                    print('Validating...')
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):

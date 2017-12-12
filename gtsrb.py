@@ -8,6 +8,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import cPickle as pickle
+from tensorflow.python import debug as tf_debug
 
 
 
@@ -256,6 +257,8 @@ def main(_):
         # Training and validation
         step = 0
         epoch = 0
+        sess = tf_debug.LocalCLIDebugWrapperSession(sess, ui_type=FLAGS.ui_type)
+
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  

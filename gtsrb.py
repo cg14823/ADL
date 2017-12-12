@@ -266,7 +266,7 @@ def main(_):
                     train_writer.add_summary(train_summary_str, step)
 
                 # Validation: Monitoring accuracy using validation set
-                if step > 1500 and step < 2000:
+                if step > 1870 and step < 1900:
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):

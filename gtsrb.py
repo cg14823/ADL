@@ -186,7 +186,7 @@ def deepnn(x_image, class_count=43):
 
     fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
     logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
-    return (logits,fc1,conv4_flat)
+    return (logits,conv1,conv4)
 
 
 
@@ -273,14 +273,15 @@ def main(_):
                         validation_accuracy, validation_summary_str,logits_out,correct_prediction_out,fc1_out,conv4_out = sess.run([accuracy, validation_summary,logits,correct_prediction,fc1,conv4_flat],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
-                        if validation_accuracy < 0.01:
-                            print(validation_accuracy)
-                        if validation_accuracy < 0.005:
-                            np.savez("fc1.npz",fc1_out)
-                            np.savez("conv4.npz",conv4_out)
-                            np.savez("logits.npz",logits_out)
-                            np.savez("preds.npz",correct_prediction_out)
-                            raw_input("BAD VAL")
+                        if step > 500:
+                            if validation_accuracy < 0.01:
+                                print(validation_accuracy)
+                            if validation_accuracy < 0.005:
+                                np.savez("conv1.npz",fc1_out)
+                                np.savez("conv4.npz",conv4_out)
+                                np.savez("logits.npz",logits_out)
+                                np.savez("preds.npz",correct_prediction_out)
+                                raw_input("BAD VAL")
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps

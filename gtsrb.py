@@ -22,12 +22,12 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 10,
+tf.app.flags.DEFINE_integer('log-frequency', 393,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 50,
+tf.app.flags.DEFINE_integer('flush-frequency', 393,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 100,
+tf.app.flags.DEFINE_integer('save-model-frequency', 393,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
@@ -212,11 +212,11 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
+        #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
-        #not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
+        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        #our_loss = tf.reduce_mean(not_cross_entropy)
+        our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -229,12 +229,12 @@ def main(_):
         '''
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
-        train_step = optimizer.minimize(cross_entropy)
+        train_step = optimizer.minimize(our_loss)
         #train_step_temp = optimizer.compute_gradients(our_loss)
         #train_step = optimizer.apply_gradients(train_step_temp)
         
         
-    loss_summary = tf.summary.scalar("Loss", cross_entropy)
+    loss_summary = tf.summary.scalar("Loss", our_loss)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
@@ -277,9 +277,9 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    #if valid_acc <= prevValidationAcc:
-                        #learningRate = learningRate/10
-                        #print('Learning Rate decreased')
+                    if valid_acc <= prevValidationAcc:
+                        learningRate = learningRate/10
+                        print('Learning Rate decreased')
                     prevValidationAcc = valid_acc
                     print('Step {}, accuracy on validation set : {}'.format(step, valid_acc))
                 
@@ -290,9 +290,9 @@ def main(_):
                 if step % FLAGS.flush_frequency == 0:
                     train_writer.flush()
                     validation_writer.flush()
-                if valid_acc > 0.9:
-                    step = FLAGS.max_steps
-                    break
+                #if valid_acc > 0.9:
+                    #step = FLAGS.max_steps
+                    #break
                 step += 1
         # Resetting the internal batch indexes
         test_batch = batch_generator(data_set,'test')

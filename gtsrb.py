@@ -270,12 +270,13 @@ def main(_):
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                        validation_accuracy, validation_summary_str,logits_out,correct_prediction_out = sess.run([accuracy, validation_summary,logits,correct_prediction],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
                         if valid_acc_tmp < 0.005:
-                            print(np.shape(test_images))
-                            print(np.shape(test_labels))
+                            print(np.shape(logits_out))
+                            print(np.shape(correct_prediction_out))
+                            print(correct_prediction_out)
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps

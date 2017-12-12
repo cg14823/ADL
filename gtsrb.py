@@ -266,13 +266,16 @@ def main(_):
                     train_writer.add_summary(train_summary_str, step)
 
                 # Validation: Monitoring accuracy using validation set
-                if step > 1880 and step < 1940:
+                if step % FLAGS.log_frequency == 0:
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
+                        if valid_acc_tmp < 0.005:
+                            print(np.shape(test_images))
+                            print(np.shape(test_labels))
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps

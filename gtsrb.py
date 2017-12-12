@@ -8,6 +8,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from cleverhans.model import CallableModelWrapper
+import cPickle as pickle
 
 
 
@@ -187,7 +188,7 @@ def deepnn(x_image, class_count=43):
 
 def main(_):
     tf.reset_default_graph()
-    data_set = np.load('gtsrb_dataset.npz')
+    data_set = pickle.load(open('dataset.pkl','rb'))
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
@@ -315,12 +316,12 @@ def main(_):
         train_writer.close()
         validation_writer.close()
 
-
-
 def batch_generator(dataset, group, batch_size=BATCH_SIZE):
 
 	idx = 0
-	dataset_size = dataset['y_{0:s}'.format(group)].shape[0]
+	dataset = dataset[0] if group == 'train' else dataset[1]
+
+	dataset_size = len(dataset)
 	indices = range(dataset_size)
 	np.random.shuffle(indices)
 	while idx < dataset_size:
@@ -328,7 +329,7 @@ def batch_generator(dataset, group, batch_size=BATCH_SIZE):
 		chunk = indices[chunk]
 		chunk = sorted(chunk)
 		idx = idx + batch_size
-		yield dataset['X_{0:s}'.format(group)][chunk], dataset['y_{0:s}'.format(group)][chunk]
+		yield [dataset[i][0] for i in chunk], [dataset[i][1] for i in chunk]
 
 if __name__ == '__main__':
     tf.app.run(main=main)

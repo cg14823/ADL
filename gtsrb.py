@@ -186,7 +186,7 @@ def deepnn(x_image, class_count=43):
 
     fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
     logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
-    return logits
+    return (logits,fc1,conv4_flat)
 
 
 
@@ -202,7 +202,7 @@ def main(_):
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
 
     with tf.variable_scope('model'):
-        logits = deepnn(x_image)
+        (logits,fc1,conv4_flat) = deepnn(x_image)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
@@ -212,11 +212,11 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
-        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
+        #not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        our_loss = tf.reduce_mean(not_cross_entropy)
+        #our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -270,14 +270,14 @@ def main(_):
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                        validation_accuracy, validation_summary_str,logits_out,correct_prediction_out = sess.run([accuracy, validation_summary,logits,correct_prediction],
+                        validation_accuracy, validation_summary_str,logits_out,correct_prediction_out,fc1_out,conv4_out = sess.run([accuracy, validation_summary,logits,correct_prediction,fc1,conv4_flat],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
                         if valid_acc_tmp < 0.01:
                             print(valid_acc_tmp)
                         if valid_acc_tmp < 0.005:
-                            np.savez("images.npz",test_images)
-                            np.savez("labels.npz",test_labels)
+                            np.savez("fc1.npz",fc1_out)
+                            np.savez("conv4.npz",conv4_out)
                             np.savez("logits.npz",logits_out)
                             np.savez("preds.npz",correct_prediction_out)
                             raw_input("BAD VAL")

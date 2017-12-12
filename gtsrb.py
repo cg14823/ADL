@@ -255,11 +255,10 @@ def main(_):
         learningRate = 0.01
         # Training and validation
         step = 0
-        
+        epoch = 0
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                print('Step {}'.format(step))
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:
@@ -281,7 +280,8 @@ def main(_):
                         learningRate = learningRate/10
                         print('Learning Rate decreased')
                     prevValidationAcc = valid_acc
-                    print('Step {}, accuracy on validation set : {}'.format(step, valid_acc))
+                    print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
+                    epoch += 1
                 
                 # Save the model checkpoint periodically.
                 if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:

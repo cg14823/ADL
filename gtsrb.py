@@ -236,10 +236,10 @@ def main(_):
     img_summary = tf.summary.image('Input Images', x_image)
     in_summary = tf.summary.image('Pre Whitening Images', x)
 
-    train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,,in_summary img_summary])
+    train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary])
     test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary])
-
+    trained_variables = tf.trainable_variables()
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer())
@@ -252,10 +252,13 @@ def main(_):
         learningRate = 0.01
         # Training and validation
         step = 0
+        
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                print('Step {}'.format(step))    
+                print('Step {}'.format(step))
+                trained_variables_out = sess.run(trained_variables,feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                print(trained_variables_out)
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:
@@ -268,7 +271,7 @@ def main(_):
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                            feed_dict={x: test_images, y_: test_labels})
+                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
@@ -297,7 +300,7 @@ def main(_):
         batch_count = 0
         test_writer = tf.summary.FileWriter(run_log_dir + "_test", sess.graph)
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels})
+            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_writer.add_summary(test_sum_out, batch_count)
             test_accuracy += temp_acc 
             batch_count += 1

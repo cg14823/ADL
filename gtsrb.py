@@ -212,11 +212,11 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
-        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
+        #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
-        #not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
+        not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
-        #our_loss = tf.reduce_mean(not_cross_entropy)
+        our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         '''
@@ -273,9 +273,9 @@ def main(_):
                         validation_accuracy, validation_summary_str,logits_out,correct_prediction_out,fc1_out,conv4_out = sess.run([accuracy, validation_summary,logits,correct_prediction,fc1,conv4_flat],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
-                        if valid_acc_tmp < 0.01:
-                            print(valid_acc_tmp)
-                        if valid_acc_tmp < 0.005:
+                        if validation_accuracy < 0.01:
+                            print(validation_accuracy)
+                        if validation_accuracy < 0.005:
                             np.savez("fc1.npz",fc1_out)
                             np.savez("conv4.npz",conv4_out)
                             np.savez("logits.npz",logits_out)

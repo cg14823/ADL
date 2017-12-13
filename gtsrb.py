@@ -228,10 +228,10 @@ def main(_):
         train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
         '''
         learning_rate = tf.placeholder(tf.float32, shape=[])
-        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
-        out_grad = optimizer.compute_gradients(our_loss)
-        slots = optimizer.get_slot_names()
-        train_step = optimizer.apply_gradients(out_grad)
+        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
+        train_step = optimizer.minimize(our_loss)
+        with tf.variable_scope('conv1') as scope:
+            trainable_vars = tf.trainable_variables(scope='conv1')
         #train_step_temp = optimizer.compute_gradients(our_loss)
         #train_step = optimizer.apply_gradients(train_step_temp)
         
@@ -262,9 +262,9 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str,slots_out = sess.run([train_step, train_summary,slots],
+                _, train_summary_str,trainable_vars_out = sess.run([train_step, train_summary,trainable_vars],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print(slots_out)
+                print(trainable_vars_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 

@@ -209,7 +209,7 @@ def main(_):
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
             val3 = tf.log(val2)
-            val3 = tf.cond(tf.is_finite(val3),lambda: val3,lambda: tf.float32.max)      
+            val3 = tf.cond(tf.is_finite(val3),lambda: val3,lambda: tf.constant(0))      
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)

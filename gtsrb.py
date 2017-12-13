@@ -204,8 +204,8 @@ def main(_):
     with tf.variable_scope('model'):
         (logits,fc1,conv4_flat) = deepnn(x_image)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
-        out_val1 = tf.constant(1)
-        out_val2 = tf.constant(1)
+        out_val1 = tf.placeholder(tf.float32)
+        out_val2 = tf.placeholder(tf.float32)
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
@@ -269,7 +269,7 @@ def main(_):
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 _, train_summary_str,out_val1_out,out_val2_out,logits_out,accuracy_out = sess.run([train_step, train_summary,out_val1,out_val2,logits,accuracy],
-                                                feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                                                feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
                 if step > 1500:
                     print("Step {} ===============".format(step))
                     np.savez("logits.npz",logits_out)
@@ -286,7 +286,7 @@ def main(_):
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
                         valid_acc_tmp += validation_accuracy
                         if step > 500:
                             if validation_accuracy < 0.01:
@@ -319,7 +319,7 @@ def main(_):
         batch_count = 0
         test_writer = tf.summary.FileWriter(run_log_dir + "_test", sess.graph)
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
             test_writer.add_summary(test_sum_out, batch_count)
             test_accuracy += temp_acc 
             batch_count += 1

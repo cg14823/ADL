@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (de
 fgsm_eps = 0.05
 adversarial_training_enabled = False
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_' + ('adv_trained' if adversarial_training_enabled else '') + 'eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_WithWhite_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -186,6 +186,7 @@ def main(_):
         our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
+        error = tf.subtract(1,accuracy)
         '''
         decay_steps = 1000  # decay the learning rate every 1000 steps
         decay_rate = 0.0001  # the base of our exponential for the decay
@@ -203,13 +204,14 @@ def main(_):
         
     loss_summary = tf.summary.scalar("Loss", our_loss)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
+    error_summary = tf.summary.scalar("Error", error)
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
     in_summary = tf.summary.image('Pre Whitening Images', x)
 
-    train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary])
-    test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary])
-    validation_summary = tf.summary.merge([loss_summary, accuracy_summary])
+    train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
+    test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary,error_summary])
+    validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer())

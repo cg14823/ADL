@@ -186,7 +186,7 @@ def main(_):
         our_loss = tf.reduce_mean(not_cross_entropy)
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
-        error = tf.subtract(1,accuracy)
+        error = tf.subtract(tf.constant(1,dtype=tf.float32,accuracy)
         '''
         decay_steps = 1000  # decay the learning rate every 1000 steps
         decay_rate = 0.0001  # the base of our exponential for the decay

@@ -283,6 +283,7 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
+                    prevValidationAcc = [valid_acc] + prevValidationAcc
                     if epoch >= 3:
                         prevValidationAcc.pop()
                         if (np.std(prevValidationAcc) < 0.01):
@@ -290,7 +291,7 @@ def main(_):
                             print('Learning Rate decreased to : {}'.format(learningRate))
                         print(np.std(prevValidationAcc))
                         
-                    prevValidationAcc = [valid_acc] + prevValidationAcc
+                    
                     print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
                     epoch += 1
                 

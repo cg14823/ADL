@@ -267,7 +267,6 @@ def main(_):
                     print(accuracy_out)
                     print(our_loss_out)
                     print(not_cross_entropy_out)
-                    print(out_grad_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
@@ -285,7 +284,7 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    if valid_acc <= prevValidationAcc:
+                    if step % 500 == 0:
                         learningRate = learningRate/10
                         print('Learning Rate decreased')
                     prevValidationAcc = valid_acc

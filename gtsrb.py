@@ -253,6 +253,7 @@ def main(_):
 
         sess.run(tf.global_variables_initializer())
         prevValidationAcc = []
+        stdCheck = 0.02
         learningRate = 0.01
         # Training and validation
         step = 0
@@ -286,8 +287,9 @@ def main(_):
                     prevValidationAcc = [valid_acc] + prevValidationAcc
                     if epoch >= 3:
                         prevValidationAcc.pop()
-                        if (np.std(prevValidationAcc) < 0.01):
+                        if (np.std(prevValidationAcc) < stdCheck):
                             learningRate = learningRate/10
+                            stdCheck = stdCheck/10
                             print('Learning Rate decreased to : {}'.format(learningRate))
                         print(np.std(prevValidationAcc))
                         

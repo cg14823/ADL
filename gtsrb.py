@@ -22,12 +22,12 @@ IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 393,
+tf.app.flags.DEFINE_integer('log-frequency', 100,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 393,
+tf.app.flags.DEFINE_integer('flush-frequency', 100,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 393,
+tf.app.flags.DEFINE_integer('save-model-frequency', 100,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
@@ -269,9 +269,7 @@ def main(_):
                     print(not_cross_entropy_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
-                if step % 500 == 0 and step != 0:
-                        learningRate = learningRate/10
-                        print('Learning Rate decreased')
+
                 # Validation: Monitoring accuracy using validation set
                 if step % FLAGS.log_frequency == 0:
                     valid_acc_tmp = 0
@@ -286,6 +284,9 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
+                    if valid_acc < prevValidationAcc:
+                        learningRate = learningRate/10
+                        print('Learning Rate decreased')
                     prevValidationAcc = valid_acc
                     print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
                     epoch += 1

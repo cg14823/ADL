@@ -208,7 +208,8 @@ def main(_):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
-            val3 = tf.log(val2)           
+            val3 = tf.log(val2)
+            val3 = tf.cond(tf.is_finite(val3),lambda: val3,lambda: tf.float32.max)      
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
@@ -259,10 +260,12 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str,our_loss_out,not_cross_entropy_out = sess.run([train_step, train_summary,our_loss,not_cross_entropy],
+                _, train_summary_str,our_loss_out,not_cross_entropy_out,accuracy_out = sess.run([train_step, train_summary,our_loss,not_cross_entropy,accuracy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 1500:
                     print("Step {} ============".format(step))
+                    print(accuracy_out)
+                    print(our_loss_out)
                     print(not_cross_entropy_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)

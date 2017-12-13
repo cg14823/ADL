@@ -252,7 +252,7 @@ def main(_):
         validation_writer = tf.summary.FileWriter(run_log_dir + "_validation", sess.graph)
 
         sess.run(tf.global_variables_initializer())
-        prevValidationAcc = 0
+        prevValidationAcc1 = []
         learningRate = 0.01
         # Training and validation
         step = 0
@@ -284,10 +284,11 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    if valid_acc < prevValidationAcc:
+                    if epoch > 3:
+                        print(np.std(prevValidationAcc1))
                         learningRate = learningRate/10
                         print('Learning Rate decreased')
-                    prevValidationAcc = valid_acc
+                    prevValidationAcc = [valid_acc] + prevValidationAcc
                     print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
                     epoch += 1
                 

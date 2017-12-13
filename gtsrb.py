@@ -211,9 +211,13 @@ def main(_):
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
             val3 = tf.log(val2)
-            if tf.is_nan(val3):
+            def fnT():
                 out_val1 = val1
                 out_val2 = val2
+                return tf.constant(True,tf.bool)
+            def fnF():
+                return tf.constant(False,tf.bool)
+            out_bool = tf.cond(tf.is_nan(val3),fnT(),fnF())                
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)

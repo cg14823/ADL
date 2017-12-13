@@ -53,7 +53,7 @@ def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.5)
     return tf.Variable(initial, name='weights')
 
-def deepnn(x_image, class_count=43):
+def deepnn(x_image,regularizer, class_count=43):
     """deepnn builds the graph for a deep net for classifying CIFAR10 images.
 
     Args:
@@ -68,48 +68,6 @@ def deepnn(x_image, class_count=43):
     # padding = tf.constant([2,2],[2,2])
     # pad_image = tf.pad
     # First convolutional layer - maps one RGB image to 32 feature maps.
-    '''
-    with tf.variable_scope('Conv_1'):
-        W_conv1 = weight_variable([5, 5, 3, 32])
-        h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME', name='conv1'))
-
-        # Pooling layer - downsamples by 2X.
-        h_pool1 = tf.nn.avg_pool(h_conv1, ksize=[1, 3, 3, 1],strides=[1, 2, 2, 1], padding='SAME', name='pooling1')
-
-    with tf.variable_scope('Conv_2'):
-        # Second convolutional layer -- maps 32 feature maps to 32.
-        W_conv2 = weight_variable([5, 5, 32, 32])
-        h_conv2 = tf.nn.relu(tf.nn.conv2d(h_pool1, W_conv2, strides=[1, 1, 1, 1], padding='SAME', name='conv2'))
-
-        # Second pooling layer.
-        h_pool2 = tf.nn.avg_pool(h_conv2, ksize=[1, 3, 3, 1],strides=[1, 2, 2, 1], padding='SAME', name='pooling2')
-
-    with tf.variable_scope('Conv_3'):
-        # Second convolutional layer -- maps 32 feature maps to 64.
-        W_conv3 = weight_variable([5, 5, 32, 64])
-        h_conv3 = tf.nn.relu(tf.nn.conv2d(h_pool2, W_conv3, strides=[1, 1, 1, 1], padding='SAME', name='conv3'))
-
-        # Second pooling layer.
-        h_pool3 = tf.nn.max_pool(h_conv3, ksize=[1, 3, 3, 1],strides=[1, 2, 2, 1], padding='SAME', name='pooling3')
-
-    with tf.variable_scope('Conv_4'):
-        # Second convolutional layer -- maps 32 feature maps to 64.
-        W_conv4 = weight_variable([4, 4, 64, 64])
-        h_conv4 = tf.nn.relu(tf.nn.conv2d(h_pool3, W_conv4, strides=[1, 1, 1, 1], padding='VALID', name='conv4'))
-
-
-    with tf.variable_scope('Conv_4'):
-        # Second convolutional layer -- maps 64 feature maps to 64.
-        h_conv4 = tf.layers.dense(inputs=h_pool3, activation=tf.nn.relu,units= 64, name='conv4')
-    
-    with tf.variable_scope('FC_1'):
-        h_conv4_flat = tf.reshape(h_conv4,[-1,64])
-        # Fully connected layer 1 -- after 2 round of downsampling, our 28x28
-        # image is down to 8x8x64 feature maps -- maps this to 1024 features.
-        logits = tf.layers.dense(inputs=h_conv4_flat,units = 43,name='fc1')
-        return logits
-
-    '''
     
     conv1 = tf.layers.conv2d(
         inputs=x_image,
@@ -118,7 +76,8 @@ def deepnn(x_image, class_count=43):
         padding='same',
         use_bias=False,
         name='conv1',
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_regularizer=regularizer
     )
     conv1_relu = tf.nn.relu(conv1)
 
@@ -139,7 +98,8 @@ def deepnn(x_image, class_count=43):
         padding='same',
         use_bias=False,
         name='conv2',
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_regularizer=regularizer
     )
     conv2_relu = tf.nn.relu(conv2)
 
@@ -160,7 +120,8 @@ def deepnn(x_image, class_count=43):
         padding='same',
         use_bias=False,
         name='conv3',
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_regularizer=regularizer
     )
     conv3_relu = tf.nn.relu(conv3)
 
@@ -179,14 +140,16 @@ def deepnn(x_image, class_count=43):
         padding='valid',
         use_bias=False,
         name='conv4',
-        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05)
+        kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
+        kernel_regularizer=regularizer
     )
     conv4_relu = tf.nn.relu(conv4)
     conv4_flat = tf.reshape(conv4_relu, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
-    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05))
+    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
+    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
     return (logits,conv1,conv4)
+
 
 
 
@@ -202,7 +165,10 @@ def main(_):
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
 
     with tf.variable_scope('model'):
-        (logits,fc1,conv4_flat) = deepnn(x_image)
+        learning_rate = tf.placeholder(tf.float32, shape=[])
+        def momentumReg(weights):
+            return tf.subtract(weights,tf.scalar_mul(tf.scalar_mul(0.0005*learning_rate),weights))
+        (logits,fc1,conv4_flat) = deepnn(x_image,momentumReg)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
@@ -227,7 +193,7 @@ def main(_):
                                                            decay_steps, decay_rate, staircase=True)
         train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
         '''
-        learning_rate = tf.placeholder(tf.float32, shape=[])
+        
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
         train_step = optimizer.minimize(our_loss)
         #train_step_temp = optimizer.compute_gradients(our_loss)
@@ -262,9 +228,6 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print("\n\n\n\n\n")
-                print([x.name for x in tf.global_variables()])
-                print("\n\n\n\n\n")
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 

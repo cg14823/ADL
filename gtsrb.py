@@ -32,7 +32,7 @@ tf.app.flags.DEFINE_integer('save-model-frequency', 100,
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
 # Optimisation hyperparameters
-tf.app.flags.DEFINE_integer('max-steps', 10000,
+tf.app.flags.DEFINE_integer('max-steps', 5000,
                             'Number of mini-batches to train on. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
@@ -146,8 +146,9 @@ def deepnn(x_image,regularizer, class_count=43):
     conv4_relu = tf.nn.relu(conv4)
     conv4_flat = tf.reshape(conv4_relu, [-1,64], name='conv4_flattened')
 
-    fc1 = tf.layers.dense(inputs=conv4_flat, activation=tf.nn.relu, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
-    logits = tf.layers.dense(inputs=fc1, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
+    fc1 = tf.layers.dense(inputs=conv4_flat, units=64, name='fc1',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
+    fc1_relu = tf.nn.relu(fc1)
+    logits = tf.layers.dense(inputs=fc1_relu, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
     return (logits,conv1,conv4)
 
 
@@ -167,7 +168,7 @@ def main(_):
     with tf.variable_scope('model'):
         learning_rate = tf.placeholder(tf.float32, shape=[])
         def momentumReg(weights):
-            return tf.subtract(weights,tf.scalar_mul(tf.scalar_mul(0.0005*learning_rate),weights))
+            return tf.subtract(weights,tf.scalar_mul(tf.scalar_mul(0.0001,learning_rate),weights))
         (logits,fc1,conv4_flat) = deepnn(x_image,momentumReg)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
         def logLoss(logitIn,classTen):
@@ -226,6 +227,8 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
+                if step > 5000:
+                    break
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step % FLAGS.log_frequency == 0:

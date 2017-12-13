@@ -208,6 +208,8 @@ def main(_):
     learning_rate_summary = tf.summary.scalar("Learning Rate", learning_rate)
     img_summary = tf.summary.image('Input Images', x_image)
     in_summary = tf.summary.image('Pre Whitening Images', x)
+    kernel_images_1_in = tf.placeholder(tf.float32)
+    kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary,error_summary])
@@ -272,11 +274,17 @@ def main(_):
                     #break
                 step += 1
         # Resetting the internal batch indexes
+        kernel_writer = tf.summary.FileWriter(run_log_dir + "_kernel1", sess.graph)
         gr = tf.get_default_graph()
         conv1_kernel = gr.get_tensor_by_name('model/conv1/kernel:0').eval()
-        conv2_kernel = gr.get_tensor_by_name('model/conv2/kernel:0').eval()
-        np.save('Kernel1Conv.npz',conv1_kernel)
-        np.save('Kernel2Conv.npz',conv2_kernel)
+        conv1_kernel_in = np.zeros([32,5,5,3])
+        for i in range(0,32):
+            conv1_kernel_in[i,:,:,:] = conv1_kernel[:,:,:,i]
+        kernel_sum_out= sess.run([kernel_img_summary], feed_dict={kernel_images_1: conv1_kernel_in})
+        kernel_writer.add_summary(kernel_sum_out)
+        kernel_writer.flush()
+        kernel_writer.close()
+
         test_batch = batch_generator(data_set,'test')
         evaluated_images = 0
         test_accuracy = 0

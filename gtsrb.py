@@ -229,7 +229,7 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                if step > 5000:
+                if step > FLAGS.max_steps:
                     break
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
@@ -272,6 +272,11 @@ def main(_):
                     #break
                 step += 1
         # Resetting the internal batch indexes
+        gr = tf.get_default_graph()
+        conv1_kernel = gr.get_tensor_by_name('model/conv1/kernel:0').eval()
+        conv2_kernel = gr.get_tensor_by_name('model/conv2/kernel:0').eval()
+        np.save('Kernel1Conv.npz',conv1_kernel)
+        np.save('Kernel2Conv.npz',conv2_kernel)
         test_batch = batch_generator(data_set,'test')
         evaluated_images = 0
         test_accuracy = 0

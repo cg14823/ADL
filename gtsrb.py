@@ -269,7 +269,9 @@ def main(_):
                     print(not_cross_entropy_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
-
+                if step % 500 == 0 and step != 0:
+                        learningRate = learningRate/10
+                        print('Learning Rate decreased')
                 # Validation: Monitoring accuracy using validation set
                 if step % FLAGS.log_frequency == 0:
                     valid_acc_tmp = 0
@@ -284,9 +286,6 @@ def main(_):
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    if step % 500 == 0:
-                        learningRate = learningRate/10
-                        print('Learning Rate decreased')
                     prevValidationAcc = valid_acc
                     print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
                     epoch += 1

@@ -230,6 +230,7 @@ def main(_):
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)
         out_grad = optimizer.compute_gradients(our_loss)
+        slots = optimizer.get_slot_names()
         train_step = optimizer.apply_gradients(out_grad)
         #train_step_temp = optimizer.compute_gradients(our_loss)
         #train_step = optimizer.apply_gradients(train_step_temp)
@@ -261,15 +262,9 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str,our_loss_out,not_cross_entropy_out,accuracy_out,out_grad_out = sess.run([train_step, train_summary,our_loss,not_cross_entropy,accuracy,out_grad],
+                _, train_summary_str,slots_out = sess.run([train_step, train_summary,slots],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                '''
-                if step > 1500:
-                    print("Step {} ============".format(step))
-                    print(accuracy_out)
-                    print(our_loss_out)
-                    print(not_cross_entropy_out)
-                '''
+                print(slots_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
@@ -287,7 +282,7 @@ def main(_):
                     prevValidationAcc = [valid_acc] + prevValidationAcc
                     if epoch >= 3:
                         prevValidationAcc.pop()
-                        if (np.std(prevValidationAcc) < stdCheck):
+                        if (np.std(prevValidationAcc) < stdCheck and epoch > 5):
                             learningRate = learningRate/10
                             stdCheck = stdCheck/10
                             print('Learning Rate decreased to : {}'.format(learningRate))

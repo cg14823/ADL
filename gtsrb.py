@@ -204,8 +204,8 @@ def main(_):
     with tf.variable_scope('model'):
         (logits,fc1,conv4_flat) = deepnn(x_image)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
-        out_val1 = -1
-        out_val2 = -1
+        out_val1 = tf.placeholder(tf.float32)
+        out_val2 = tf.placeholder(tf.float32)
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
@@ -217,7 +217,7 @@ def main(_):
                 return tf.constant(True,tf.bool)
             def fnF():
                 return tf.constant(False,tf.bool)
-            out_bool = tf.cond(tf.is_nan(val3),fnT(),fnF())                
+            out_bool = tf.cond(tf.is_nan(val3),lambda: fnT(),lambda: fnF())                
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)

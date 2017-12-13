@@ -263,8 +263,7 @@ def main(_):
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 1500:
                     print("Step {} ============".format(step))
-                    print(our_loss_out)
-                    print(np.shape(not_cross_entropy_out))
+                    print(not_cross_entropy_out)
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 

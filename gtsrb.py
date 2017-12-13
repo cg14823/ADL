@@ -263,7 +263,7 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 _, train_summary_str,trainable_vars_out = sess.run([train_step, train_summary,kernel],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                print(trainable_vars_out)
+                print([x.name for x in tf.global_variables()])
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 

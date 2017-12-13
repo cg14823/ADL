@@ -252,7 +252,7 @@ def main(_):
         validation_writer = tf.summary.FileWriter(run_log_dir + "_validation", sess.graph)
 
         sess.run(tf.global_variables_initializer())
-        prevValidationAcc1 = []
+        prevValidationAcc = []
         learningRate = 0.01
         # Training and validation
         step = 0
@@ -262,11 +262,13 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 _, train_summary_str,our_loss_out,not_cross_entropy_out,accuracy_out,out_grad_out = sess.run([train_step, train_summary,our_loss,not_cross_entropy,accuracy,out_grad],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                '''
                 if step > 1500:
                     print("Step {} ============".format(step))
                     print(accuracy_out)
                     print(our_loss_out)
                     print(not_cross_entropy_out)
+                '''
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
@@ -278,16 +280,14 @@ def main(_):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
-                        if step > 500:
-                            if validation_accuracy < 0.01:
-                                print(validation_accuracy)
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps
-                    if epoch > 3:
-                        print(np.std(prevValidationAcc1))
-                        learningRate = learningRate/10
-                        print('Learning Rate decreased')
+                    if epoch >= 3:
+                        prevValidationAcc.pop()
+                        print(np.std(prevValidationAcc))
+                        #learningRate = learningRate/10
+                        #print('Learning Rate decreased')
                     prevValidationAcc = [valid_acc] + prevValidationAcc
                     print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
                     epoch += 1

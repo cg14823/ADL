@@ -209,7 +209,7 @@ def main(_):
     img_summary = tf.summary.image('Input Images', x_image)
     in_summary = tf.summary.image('Pre Whitening Images', x)
     kernel_images_1_in = tf.placeholder(tf.float32)
-    kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1,32)
+    kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary,error_summary])
@@ -280,7 +280,7 @@ def main(_):
         conv1_kernel_in = np.zeros([32,5,5,3])
         for i in range(0,32):
             conv1_kernel_in[i,:,:,:] = conv1_kernel[:,:,:,i]
-        kernel_sum_out= sess.run([kernel_img_summary], feed_dict={kernel_images_1: conv1_kernel_in})
+        kernel_sum_out= sess.run([kernel_img_summary], feed_dict={kernel_images_1_in: conv1_kernel_in})
         kernel_writer.add_summary(kernel_sum_out)
         kernel_writer.flush()
         kernel_writer.close()

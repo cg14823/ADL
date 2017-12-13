@@ -230,8 +230,7 @@ def main(_):
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
         train_step = optimizer.minimize(our_loss)
-        with tf.variable_scope('conv1') as scope:
-            trainable_vars = tf.trainable_variables(scope='conv1')
+        kernel = tf.get_collection('kernel',scope='conv1')
         #train_step_temp = optimizer.compute_gradients(our_loss)
         #train_step = optimizer.apply_gradients(train_step_temp)
         
@@ -262,7 +261,7 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str,trainable_vars_out = sess.run([train_step, train_summary,trainable_vars],
+                _, train_summary_str,trainable_vars_out = sess.run([train_step, train_summary,kernel],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 print(trainable_vars_out)
                 if step % FLAGS.log_frequency == 0:

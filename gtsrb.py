@@ -204,11 +204,16 @@ def main(_):
     with tf.variable_scope('model'):
         (logits,fc1,conv4_flat) = deepnn(x_image)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
+        out_val1 = -1
+        out_val2 = -1
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
             val3 = tf.log(val2)
+            if tf.is_nan(val3):
+                out_val1 = val1
+                out_val2 = val2
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
@@ -256,12 +261,18 @@ def main(_):
         # Training and validation
         step = 0
         epoch = 0
-
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str = sess.run([train_step, train_summary],
+                _, train_summary_str,out_val1_out,out_val2_out,logits_out,accuracy_out = sess.run([train_step, train_summary,out_val1,out_val2,logits,accuracy],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
+                if step > 1500:
+                    print("Step {} ===============".format(step))
+                    np.savez("logits.npz",logits_out)
+                    print("val1 = {}".format(out_val1_out))
+                    print("val2 = {}".format(out_val2_out))
+                    if accuracy_out < 0.005:
+                        raw_input("BAD VAL")
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
@@ -270,17 +281,12 @@ def main(_):
                     valid_acc_tmp = 0
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                        validation_accuracy, validation_summary_str,fc1_out,x_image_out,x_out = sess.run([accuracy, validation_summary,logits,correct_prediction,fc1,x_image,x],
+                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
                                                                             feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
                         if step > 500:
                             if validation_accuracy < 0.01:
                                 print(validation_accuracy)
-                            if validation_accuracy < 0.005:
-                                np.savez("x_image.npz",x_image_out)
-                                np.savez("x.npz",x_out)
-                                np.savez("conv1.npz",fc1_out)
-                                raw_input("BAD VAL")
                         validation_steps += 1
                         validation_writer.add_summary(validation_summary_str, step)
                     valid_acc = valid_acc_tmp/validation_steps

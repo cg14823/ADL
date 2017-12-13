@@ -217,7 +217,7 @@ def main(_):
                 return tf.constant(True,tf.bool)
             def fnF():
                 return tf.constant(False,tf.bool)
-            out_bool = tf.cond(tf.is_nan(val3),lambda: fnT(),lambda: fnF())                
+            out_bool = tf.cond(tf.is_nan(val3),fnT,fnF)                
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)

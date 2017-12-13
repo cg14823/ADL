@@ -204,20 +204,11 @@ def main(_):
     with tf.variable_scope('model'):
         (logits,fc1,conv4_flat) = deepnn(x_image)
         correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
-        out_val1 = tf.placeholder(tf.float32)
-        out_val2 = tf.placeholder(tf.float32)
         def logLoss(logitIn,classTen):
             val5 = tf.argmax(classTen)
             val1 = tf.exp(logitIn)
             val2 = tf.reduce_sum(val1)
-            val3 = tf.log(val2)
-            def fnT():
-                out_val1 = val1
-                out_val2 = val2
-                return tf.constant(True,tf.bool)
-            def fnF():
-                return tf.constant(False,tf.bool)
-            out_bool = tf.cond(tf.is_nan(val3),fnT,fnF)                
+            val3 = tf.log(val2)           
             val6 = tf.gather(logitIn,val5)
             
             return tf.subtract(val3,val6)
@@ -268,15 +259,12 @@ def main(_):
         while step < FLAGS.max_steps:
             
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
-                _, train_summary_str,out_val1_out,out_val2_out,logits_out,accuracy_out = sess.run([train_step, train_summary,out_val1,out_val2,logits,accuracy],
-                                                feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
+                _, train_summary_str,our_loss_out,not_cross_entropy_out = sess.run([train_step, train_summary,our_loss,not_cross_entropy],
+                                                feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 1500:
-                    print("Step {} ===============".format(step))
-                    np.savez("logits.npz",logits_out)
-                    print("val1 = {}".format(out_val1_out))
-                    print("val2 = {}".format(out_val2_out))
-                    if accuracy_out < 0.005:
-                        raw_input("BAD VAL")
+                    print("Step {} ============".format(step))
+                    print(our_loss_out)
+                    print(np.shape(not_cross_entropy_out))
                 if step % FLAGS.log_frequency == 0:
                     train_writer.add_summary(train_summary_str, step)
 
@@ -286,7 +274,7 @@ def main(_):
                     validation_steps = 0
                     for (test_images, test_labels) in batch_generator(data_set, 'test'):
                         validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
+                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
                         valid_acc_tmp += validation_accuracy
                         if step > 500:
                             if validation_accuracy < 0.01:
@@ -319,7 +307,7 @@ def main(_):
         batch_count = 0
         test_writer = tf.summary.FileWriter(run_log_dir + "_test", sess.graph)
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate,out_val1:tf.constant(1),out_val2:tf.constant(2)})
+            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_writer.add_summary(test_sum_out, batch_count)
             test_accuracy += temp_acc 
             batch_count += 1

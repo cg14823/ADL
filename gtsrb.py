@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_GettingErrorGraphs_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GettingErrorGraphs2_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -153,7 +153,9 @@ def main(_):
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-        x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        #x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        x_image = x
+
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
 
@@ -190,7 +192,9 @@ def main(_):
     img_summary = tf.summary.image('Input Images', x_image)
     in_summary = tf.summary.image('Pre Whitening Images', x)
     kernel_images_1_in = tf.placeholder(tf.float32)
+    kernel_images_2_in = tf.placeholder(tf.float32)
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
+    kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
@@ -252,33 +256,32 @@ def main(_):
                         validation_writer.flush()
                 step += 1
         # Resetting the internal batch indexes
-        kernel_writer = tf.summary.FileWriter(run_log_dir + "_kernel1", sess.graph)
+        kernel_writer = tf.summary.FileWriter(run_log_dir + "_kernels", sess.graph)
         gr = tf.get_default_graph()
         conv1_kernel = gr.get_tensor_by_name('model/conv1/kernel:0').eval()
         conv1_kernel_in = np.zeros([32,5,5,3])
+        conv2_kernel_in = np.zeros([32,5,5,1])
         for i in range(0,32):
             conv1_kernel_in[i,:,:,:] = conv1_kernel[:,:,:,i]
-        kernel_sum_out= sess.run(kernel_img_summary_1, feed_dict={kernel_images_1_in: conv1_kernel_in})
+            conv2_kernel_in[i,:,:,0] = conv2_kernel[:,:,0,i]
+        [kernel_sum_out,kernel_sum_out_2]= sess.run([kernel_img_summary_1,kernel_img_summary_2], feed_dict={kernel_images_1_in: conv1_kernel_in,kernel_images_2_in: conv2_kernel_in})
         kernel_writer.add_summary(kernel_sum_out)
+        kernel_writer.add_summary(kernel_sum_out_2)
         kernel_writer.flush()
         kernel_writer.close()
         evaluated_images = 0
         test_accuracy = 0
         batch_count = 0
-        test_writer = tf.summary.FileWriter(run_log_dir + "_test", sess.graph)
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,test_sum_out = sess.run([accuracy,test_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
-            test_writer.add_summary(test_sum_out, batch_count)
+            temp_acc = sess.run(accuracy, feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_accuracy += temp_acc 
             batch_count += 1
             evaluated_images += np.shape(test_labels)[0]
 
         test_accuracy = test_accuracy / batch_count
-        test_writer.flush()
         print('test set: accuracy on test set: %0.3f' % test_accuracy)
 
         print('model saved to ' + checkpoint_path)
-        test_writer.close()
         train_writer.close()
         validation_writer.close()
 

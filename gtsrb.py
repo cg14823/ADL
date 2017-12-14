@@ -20,7 +20,7 @@ IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
 IMG_CHANNELS = 3
 BATCH_SIZE   = 100
-
+fgsm_eps = 0.05
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('log-frequency', 100,
                             'Number of steps between logging results to the console and saving summaries.' +
@@ -153,8 +153,8 @@ def main(_):
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-        #x_image = tf.map_fn(tf.image.per_image_standardization, x)
-        x_image = x
+        x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        #x_image = x
 
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])

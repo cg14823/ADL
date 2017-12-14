@@ -280,7 +280,7 @@ def main(_):
         conv1_kernel_in = np.zeros([32,5,5,3])
         for i in range(0,32):
             conv1_kernel_in[i,:,:,:] = conv1_kernel[:,:,:,i]
-        kernel_sum_out= sess.run([kernel_img_summary], feed_dict={kernel_images_1_in: conv1_kernel_in})
+        kernel_sum_out= sess.run(kernel_img_summary, feed_dict={kernel_images_1_in: conv1_kernel_in})
         kernel_writer.add_summary(kernel_sum_out)
         kernel_writer.flush()
         kernel_writer.close()

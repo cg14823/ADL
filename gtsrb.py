@@ -37,23 +37,15 @@ tf.app.flags.DEFINE_integer('max-steps', 5000,
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
-
-fgsm_eps = 0.05
-adversarial_training_enabled = False
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_WithWhite_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GettingErrorGraphs_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
 # limit the process memory to a third of the total gpu memory
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.33)
 
-def weight_variable(shape):
-    '''weight_variable generates a weight variable of a given shape.'''
-    initial = tf.truncated_normal(shape, stddev=0.5)
-    return tf.Variable(initial, name='weights')
-
-def deepnn(x_image,regularizer, class_count=43):
+def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
     """deepnn builds the graph for a deep net for classifying CIFAR10 images.
 
     Args:
@@ -179,7 +171,6 @@ def main(_):
             val6 = tf.gather(logitIn,val5)
             val3 = tf.cond(tf.is_finite(val3),lambda: val3,lambda: tf.add(val6,tf.constant(0.001))) 
             return tf.subtract(val3,val6)
-        #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=logits))
 
         not_cross_entropy = tf.map_fn(lambda (v1,v2):logLoss(v1,v2),(logits,y_),dtype=tf.float32)
 
@@ -187,19 +178,9 @@ def main(_):
 
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         error = tf.subtract(tf.constant(1,dtype=tf.float32),accuracy)
-        '''
-        decay_steps = 1000  # decay the learning rate every 1000 steps
-        decay_rate = 0.0001  # the base of our exponential for the decay
-        global_step = tf.Variable(0, trainable=False)  # this will be incremented automatically by tensorflow
-        decayed_learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step,
-                                                           decay_steps, decay_rate, staircase=True)
-        train_step = tf.train.MomentumOptimizer(decayed_learning_rate, 0.9).minimize(cross_entropy, global_step=global_step)
-        '''
         
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
         train_step = optimizer.minimize(our_loss)
-        #train_step_temp = optimizer.compute_gradients(our_loss)
-        #train_step = optimizer.apply_gradients(train_step_temp)
         
         
     loss_summary = tf.summary.scalar("Loss", our_loss)
@@ -212,7 +193,6 @@ def main(_):
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
-    test_summary = tf.summary.merge([loss_summary,accuracy_summary,in_summary,img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
@@ -235,43 +215,41 @@ def main(_):
                     break
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
-                if step % FLAGS.log_frequency == 0:
-                    train_writer.add_summary(train_summary_str, step)
+                if step > 0:
+                    if step % FLAGS.log_frequency == 0:
+                        train_writer.add_summary(train_summary_str, step)
 
-                # Validation: Monitoring accuracy using validation set
-                if step % FLAGS.log_frequency == 0:
-                    valid_acc_tmp = 0
-                    validation_steps = 0
-                    for (test_images, test_labels) in batch_generator(data_set, 'test'):
-                        validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
-                                                                            feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
-                        valid_acc_tmp += validation_accuracy
-                        validation_steps += 1
-                        validation_writer.add_summary(validation_summary_str, step)
-                    valid_acc = valid_acc_tmp/validation_steps
-                    prevValidationAcc = [valid_acc] + prevValidationAcc
-                    if epoch >= 3:
-                        prevValidationAcc.pop()
-                        if (np.std(prevValidationAcc) < stdCheck and epoch > 5):
-                            learningRate = learningRate/10
-                            stdCheck = stdCheck/5
-                            print('Learning Rate decreased to : {}, stdCheck = {}'.format(learningRate,stdCheck))
-                        print(np.std(prevValidationAcc))
+                    # Validation: Monitoring accuracy using validation set
+                    if step % FLAGS.log_frequency == 0:
+                        valid_acc_tmp = 0
+                        validation_steps = 0
+                        for (test_images, test_labels) in batch_generator(data_set, 'test'):
+                            validation_accuracy, validation_summary_str = sess.run([accuracy, validation_summary],
+                                                                                feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+                            valid_acc_tmp += validation_accuracy
+                            validation_steps += 1
+                            validation_writer.add_summary(validation_summary_str, step)
+                        valid_acc = valid_acc_tmp/validation_steps
+                        prevValidationAcc = [valid_acc] + prevValidationAcc
+                        if epoch >= 3:
+                            prevValidationAcc.pop()
+                            if (np.std(prevValidationAcc) < stdCheck and epoch > 5):
+                                learningRate = learningRate/10
+                                stdCheck = stdCheck/5
+                                print('Learning Rate decreased to : {}, stdCheck = {}'.format(learningRate,stdCheck))
+                            print(np.std(prevValidationAcc))
+                            
                         
+                        print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
+                        epoch += 1
                     
-                    print('Step {}, Epoch {}, accuracy on validation set : {}'.format(step,epoch, valid_acc))
-                    epoch += 1
-                
-                # Save the model checkpoint periodically.
-                if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
-                    saver.save(sess, checkpoint_path, global_step=step)
+                    # Save the model checkpoint periodically.
+                    if step % FLAGS.save_model_frequency == 0 or (step + 1) == FLAGS.max_steps:
+                        saver.save(sess, checkpoint_path, global_step=step)
 
-                if step % FLAGS.flush_frequency == 0:
-                    train_writer.flush()
-                    validation_writer.flush()
-                #if valid_acc > 0.9:
-                    #step = FLAGS.max_steps
-                    #break
+                    if step % FLAGS.flush_frequency == 0:
+                        train_writer.flush()
+                        validation_writer.flush()
                 step += 1
         # Resetting the internal batch indexes
         kernel_writer = tf.summary.FileWriter(run_log_dir + "_kernel1", sess.graph)
@@ -284,8 +262,6 @@ def main(_):
         kernel_writer.add_summary(kernel_sum_out)
         kernel_writer.flush()
         kernel_writer.close()
-
-        test_batch = batch_generator(data_set,'test')
         evaluated_images = 0
         test_accuracy = 0
         batch_count = 0

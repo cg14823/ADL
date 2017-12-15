@@ -32,11 +32,10 @@ def batch_generator(dataset, group, batch_size=1):
 		yield [dataset[i][0] for i in chunk], [dataset[i][1] for i in chunk]
 
 def applyMotionBlur(imageIn):
-    zA = [1,1,1]
-    oA = [2,1,2]
+    zA = [0,0,0]
+    oA = [1,2,1]
     motionBlurKernel = np.array([[zA, zA, zA],[oA, oA, oA],[zA, zA, zA]])
-    motionBlurKernel = np.divide(motionBlurKernel,27.)
-    print(motionBlurKernel)
+    motionBlurKernel = np.divide(motionBlurKernel,12.)
     imageOut = scipy.ndimage.filters.convolve(imageIn,motionBlurKernel,mode='nearest',cval=0.0)
     imageOut = np.clip(imageOut,0,1)
     return imageOut

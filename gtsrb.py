@@ -21,7 +21,7 @@ sys.path.append(os.path.join(here, '..', 'CIFAR10'))
 CLASS_COUNT  = 43
 IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
-IMG_CHANNELS = 1
+IMG_CHANNELS = 3
 BATCH_SIZE   = 100
 APPLY_RANDOM_BLUR = 0
 fgsm_eps = 0.05
@@ -153,7 +153,7 @@ def rgb2yuv(img):
                  [0.58700, -0.33126, -0.41869],
                  [ 0.11400, 0.50000, -0.08131]])
     yuv = np.dot(img,m)
-    yuv=[:,:,1:]+=128.0
+    yuv[:,:,1:]+=128.0
     return yuv
 
 def main(_):
@@ -162,10 +162,9 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+        x = tf.placeholder(tf.float32)
         #x_image = tf.map_fn(tf.image.per_image_standardization, x)
-        x_image = rgb2yuv(x)
-        x_image = x_image[:,:,0]
+        x_image = x[:,:,0]
         x_image = (x_image / 255.).astype(np.float32)
         x_image = (exposure.equalize_adapthist(x_image,) - 0.5)
         x_image = x_image.reshape(x_image.shape + (1,))
@@ -236,7 +235,8 @@ def main(_):
                     for i in range(len(train_images)):
                         if (random.randint(0,2) == 0):
                             train_images[i] = applyMotionBlur(train_images[i])
-
+                for i in range(len(train_images)):
+                    train_images[i] = rgb2yuv(train_images[i])
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 0:

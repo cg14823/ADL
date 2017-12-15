@@ -199,8 +199,12 @@ def main(_):
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
     classification_summary = tf.summary.image('Init Images', x[0],32)
+    def fnTrue(iVal):
+        return tf.summary.image('Mis-Classified Images', x[iVal],32)
+    def fnFalse(iVal):
+        return tf.summary.image('Correct-Classified Images', x[iVal],32)
     for i in range(100):
-        summary_out = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:return tf.summary.image('Mis-Classified Images', x[i],32),lambda:return tf.summary.image('Correct-Classified Images', x[i],32))            
+        summary_out = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnTrue(i),lambda:fnFalse(i))            
         classification_summary = tf.summary.merge([classification_summary,summary_out])
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])

@@ -203,11 +203,11 @@ def main(_):
     indT = 0
     indF = 0
     def fnHere(iVal):
-        mis_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
+        mis_class_imgs[indT,:,:,:] = x[iVal,:,:,:]
         indT+=1
         return True
     def fnFalse():
-        correct_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
+        correct_class_imgs[indF,:,:,:] = x[iVal,:,:,:]
         indF+=1
         return False
     for i in range(100):

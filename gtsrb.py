@@ -312,8 +312,9 @@ def applyRandomBlur(imageIn):
 
 def applyMotionBlur(imageIn):
     zA = [0,0,0]
-    oA = [1,2,1]
-    motionBlurKernel = np.array([[zA, zA, zA],[oA, oA, oA],[zA, zA, zA]])
+    oA = [1,1,1]
+    tA = [2,2,2]
+    motionBlurKernel = np.array([[zA, zA, zA],[oA, tA, oA],[zA, zA, zA]])
     motionBlurKernel = np.divide(motionBlurKernel,12.)
     imageOut = scipy.ndimage.filters.convolve(imageIn,motionBlurKernel,mode='nearest',cval=0.0)
     imageOut = np.clip(imageOut,0,1)

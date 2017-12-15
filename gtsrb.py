@@ -164,11 +164,8 @@ def main(_):
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.float32)
         #x_image = tf.map_fn(tf.image.per_image_standardization, x)
-        x_image = x[:,:,0]
-        x_image = (x_image / 255.).astype(np.float32)
-        x_image = (exposure.equalize_adapthist(x_image,) - 0.5)
-        x_image = x_image.reshape(x_image.shape + (1,))
-        #x_image = x
+        
+        x_image = x
 
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
@@ -237,6 +234,10 @@ def main(_):
                             train_images[i] = applyMotionBlur(train_images[i])
                 for i in range(len(train_images)):
                     train_images[i] = rgb2yuv(train_images[i])
+                    x = x[:,:,0]
+                    x = (x / 255.).astype(np.float32)
+                    x = (exposure.equalize_adapthist(x,) - 0.5)
+                    x = x.reshape(x.shape + (1,))
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 0:

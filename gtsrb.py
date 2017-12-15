@@ -202,16 +202,18 @@ def main(_):
     correct_class_imgs = tf.zeros(dtype=tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
     indT = 0
     indF = 0
-    def fnHere(iVal):
-        mis_class_imgs[indT,:,:,:] = x[iVal,:,:,:]
-        indT+=1
-        return True
-    def fnFalse():
-        correct_class_imgs[indF,:,:,:] = x[iVal,:,:,:]
-        indF+=1
-        return False
+    def fnHere(iVal,ind):
+        mis_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
+        return (1,0)
+    def fnFalse(iVal,ind):
+        correct_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
+        return (0,1)
     for i in range(100):
-        out_here = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnHere(i),lambda:fnFalse(i))            
+        (indTAdd,indFAdd) = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnHere(i,indT),lambda:fnFalse(i,indF))            
+        indT+=indTAdd
+        indF+=indFAdd
+    
+    
     mis_classified_img_summary = tf.summary.image('Mis-Classified Images', mis_class_imgs,32)
     cor_classified_img_summary = tf.summary.image('Correct-Classified Images', correct_class_imgs,32)
     classification_summary = tf.summary.merge([mis_classified_img_summary,cor_classified_img_summary])

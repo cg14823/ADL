@@ -4,6 +4,13 @@ import cPickle as pickle
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
+import numpy as np
+import cPickle as pickle
+import time
+import random
+import scipy.ndimage
+from skimage import exposure
+
 def whitening(dataset):
     x = 0
     for i in range(dataset["X_train"].shape[0]):
@@ -41,6 +48,26 @@ def applyMotionBlur(imageIn):
     imageOut = np.clip(imageOut,0,1)
     return imageOut
 
+def rgb2yuv(img):
+    m = np.array([[ 0.29900, -0.16874,  0.50000],
+                 [0.58700, -0.33126, -0.41869],
+                 [ 0.11400, 0.50000, -0.08131]])
+    yuv = np.dot(img,m)
+    yuv[:,:,1:]+=128.0
+    return yuv
+
+def YUV2RGB( yuv ):
+       
+    m = np.array([[ 1.0, 1.0, 1.0],
+                 [-0.000007154783816076815, -0.3441331386566162, 1.7720025777816772],
+                 [ 1.4019975662231445, -0.7141380310058594 , 0.00001542569043522235] ])
+     
+    rgb = np.dot(yuv,m)
+    rgb[:,:,0]-=179.45477266423404
+    rgb[:,:,1]+=135.45870971679688
+    rgb[:,:,2]-=226.8183044444304
+    return rgb
+
 def main():
     data_set = pickle.load(open('dataset.pkl','rb'))
     generate_motherfucker =batch_generator(data_set, 'train')
@@ -54,9 +81,14 @@ def main():
     plt.imshow(x[0])
     plt.show()
     fig.savefig('NoBlur.png')
-    x2 = applyMotionBlur(x[0])
+    x2 = rgb2yuv(x[0])
+    x2 = x2[:,:,0]
+    x2 = (x2 / 255.).astype(np.float32)
+    x2 = (exposure.equalize_adapthist(x2,) - 0.5)
+    #x2 = x2.reshape(x2.shape + (1,))
+    print(np.shape(x2))
     fig = plt.figure()
-    plt.imshow(x2)
+    plt.imshow(x2,cmap='gray')
     plt.show()
     fig.savefig('Blur.png')
     print(x[0])

@@ -11,6 +11,7 @@ import cPickle as pickle
 import time
 import random
 import scipy.ndimage
+from skimage import exposure
 
 
 
@@ -162,7 +163,7 @@ def main(_):
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.float32)
+        x = tf.placeholder(tf.float32,shape=[-1,32,32,1])
         #x_image = tf.map_fn(tf.image.per_image_standardization, x)
         
         x_image = x

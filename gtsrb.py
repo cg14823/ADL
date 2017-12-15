@@ -198,7 +198,7 @@ def main(_):
     kernel_images_2_in = tf.placeholder(tf.float32)
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
-    mis_class_imgs = tf.constant(tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+    mis_class_imgs = tf.zeros(dtype=tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
     ind = 0
     for i in range(100):
         if (tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))):

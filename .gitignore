@@ -5,3 +5,6 @@ dataset.pkl
 out.txt
 test.py
 Conv1Kernels.png
+NoBlur.png
+Blur.png
+

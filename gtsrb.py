@@ -10,6 +10,7 @@ import tensorflow as tf
 import cPickle as pickle
 import time
 import random
+import scipy.ndimage
 
 
 
@@ -22,6 +23,7 @@ IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
 IMG_CHANNELS = 3
 BATCH_SIZE   = 100
+APPLY_RANDOM_BLUR = 1
 fgsm_eps = 0.05
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('log-frequency', 100,
@@ -219,15 +221,10 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 if step > FLAGS.max_steps:
                     break
-                numBlurred = 0
-                numNot = 0
-                for i in range(len(train_images)):
-                    if (random.randint(0,1)):
-                        numBlurred += 1
-                        train_images[i] = applyRandomBlur(train_images[i])
-                    else:
-                        numNot += 1
-                print("{}:{} || {}".format(numBlurred,numNot,numBlurred+numNot))
+                if (APPLY_RANDOM_BLUR):
+                    for i in range(len(train_images)):
+                        if (random.randint(0,1) == 0):
+                            train_images[i] = applyMotionBlur(train_images[i])
 
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
@@ -311,6 +308,15 @@ def main(_):
 
 def applyRandomBlur(imageIn):
     imageOut = scipy.ndimage.filters.gaussian_filter(imageIn,2)
+    return imageOut
+
+def applyMotionBlur(imageIn):
+    zA = [1,1,1]
+    oA = [2,1,2]
+    motionBlurKernel = np.array([[zA, zA, zA],[oA, oA, oA],[zA, zA, zA]])
+    motionBlurKernel = np.divide(motionBlurKernel,27.)
+    imageOut = scipy.ndimage.filters.convolve(imageIn,motionBlurKernel,mode='nearest',cval=0.0)
+    imageOut = np.clip(imageOut,0,1)
     return imageOut
 
 def evaluatePerClass(correctPreditionCount, count, logits, labels):

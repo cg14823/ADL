@@ -198,25 +198,10 @@ def main(_):
     kernel_images_2_in = tf.placeholder(tf.float32)
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
-    mis_class_imgs = tf.zeros(dtype=tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-    correct_class_imgs = tf.zeros(dtype=tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-    indT = 0
-    indF = 0
-    def fnHere(iVal,ind):
-        mis_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
-        return (1,0)
-    def fnFalse(iVal,ind):
-        correct_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
-        return (0,1)
+    classification_summary = tf.summary.image('Init Images', x[0],32)
     for i in range(100):
-        (indTAdd,indFAdd) = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnHere(i,indT),lambda:fnFalse(i,indF))            
-        indT+=indTAdd
-        indF+=indFAdd
-    
-    
-    mis_classified_img_summary = tf.summary.image('Mis-Classified Images', mis_class_imgs,32)
-    cor_classified_img_summary = tf.summary.image('Correct-Classified Images', correct_class_imgs,32)
-    classification_summary = tf.summary.merge([mis_classified_img_summary,cor_classified_img_summary])
+        summary_out = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:return tf.summary.image('Mis-Classified Images', x[i],32),lambda:return tf.summary.image('Correct-Classified Images', x[i],32))            
+        classification_summary = tf.summary.merge([classification_summary,summary_out])
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)

@@ -198,14 +198,8 @@ def main(_):
     kernel_images_2_in = tf.placeholder(tf.float32)
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
-    classification_summary = tf.summary.image('Init Images', x[0],32)
-    def fnTrue(iVal):
-        return tf.summary.image('Mis-Classified Images', x[iVal],32)
-    def fnFalse(iVal):
-        return tf.summary.image('Correct-Classified Images', x[iVal],32)
-    for i in range(100):
-        summary_out = tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnTrue(i),lambda:fnFalse(i))            
-        classification_summary = tf.summary.merge([classification_summary,summary_out])
+
+
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
@@ -293,16 +287,18 @@ def main(_):
         class_imgs_writer = tf.summary.FileWriter(run_log_dir + "_mis_classed", sess.graph)
 
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,logits_out,classification_summary_out = sess.run([accuracy,logits,classification_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+            temp_acc,logits_out,cor_pred_out = sess.run([accuracy,logits,correct_prediction], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_accuracy += temp_acc 
+            if batch_count == 0:
+                np.savez('ImagesOut.npz',test_images)
+                np.savez('PredsOut.npz',cor_pred_out)
             batch_count += 1
             correctPredictionCount, trueClassCount = evaluatePerClass(correctPredictionCount, trueClassCount, logits_out, test_labels)
             evaluated_images += np.shape(test_labels)[0]
-            class_imgs_writer.add_summary(classification_summary,batch_count)
+            
 
         test_accuracy = test_accuracy / batch_count
         print('test set: accuracy on test set: %0.3f' % test_accuracy)
-        class_imgs_writer.flush()
         accuracyPerClass = [0.0,0.0,0.0,0.0,0.0,0.0]
         for i in range(6):
             accuracyPerClass[i] = float(correctPredictionCount[i]) / trueClassCount[i]

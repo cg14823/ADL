@@ -11,7 +11,6 @@ import cPickle as pickle
 import time
 import random
 import scipy.ndimage
-from skimage import exposure
 
 
 
@@ -43,7 +42,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_CLAHE_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_NESTEROV_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -148,25 +147,16 @@ def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
     logits = tf.layers.dense(inputs=fc1_relu, units=class_count, name='fc2',kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),kernel_regularizer=regularizer)
     return (logits,conv1,conv4)
 
-
-def rgb2yuv(img):
-    m = np.array([[ 0.29900, -0.16874,  0.50000],
-                 [0.58700, -0.33126, -0.41869],
-                 [ 0.11400, 0.50000, -0.08131]])
-    yuv = np.dot(img,m)
-    yuv[:,:,1:]+=128.0
-    return yuv
-
 def main(_):
     tf.reset_default_graph()
     data_set = pickle.load(open('dataset.pkl','rb'))
 
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.float32,shape=[-1,32,32,1])
-        #x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        x = tf.placeholder(tf.float32,shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+        x_image = tf.map_fn(tf.image.per_image_standardization, x)
         
-        x_image = x
+        #x_image = x
 
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization
         y_ = tf.placeholder(tf.float32, shape=[None, CLASS_COUNT])
@@ -193,7 +183,7 @@ def main(_):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         error = tf.subtract(tf.constant(1,dtype=tf.float32),accuracy)
         
-        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
+        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9,use_nesterov=True)  
         train_step = optimizer.minimize(our_loss)
         
         
@@ -233,12 +223,6 @@ def main(_):
                     for i in range(len(train_images)):
                         if (random.randint(0,2) == 0):
                             train_images[i] = applyMotionBlur(train_images[i])
-                for i in range(len(train_images)):
-                    train_images[i] = rgb2yuv(train_images[i])
-                    x = x[:,:,0]
-                    x = (x / 255.).astype(np.float32)
-                    x = (exposure.equalize_adapthist(x,) - 0.5)
-                    x = x.reshape(x.shape + (1,))
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 0:

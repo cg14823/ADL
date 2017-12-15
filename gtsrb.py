@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 import cPickle as pickle
 import time
+import random
 
 
 
@@ -218,6 +219,16 @@ def main(_):
             for (train_images, train_labels) in batch_generator(data_set, 'train'):  
                 if step > FLAGS.max_steps:
                     break
+                numBlurred = 0
+                numNot = 0
+                for i in range(len(train_images)):
+                    if (random.randint(0,1)):
+                        numBlurred += 1
+                        train_images[i] = applyRandomBlur(train_images[i])
+                    else:
+                        numNot += 1
+                print("{}:{} || {}".format(numBlurred,numNot,numBlurred+numNot))
+
                 _, train_summary_str = sess.run([train_step, train_summary],
                                                 feed_dict={x: train_images, y_: train_labels, learning_rate: learningRate})
                 if step > 0:
@@ -297,6 +308,10 @@ def main(_):
         print('model saved to ' + checkpoint_path)
         train_writer.close()
         validation_writer.close()
+
+def applyRandomBlur(imageIn):
+    imageOut = scipy.ndimage.filters.gaussian_filter(imageIn,2)
+    return imageOut
 
 def evaluatePerClass(correctPreditionCount, count, logits, labels):
     trueClass = np.argmax(labels,1)

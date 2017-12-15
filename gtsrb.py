@@ -200,12 +200,11 @@ def main(_):
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
     mis_class_imgs = tf.zeros(dtype=tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
     ind = 0
+    def fnHere(iVal):
+        mis_class_imgs[ind,:,:,:] = x[iVal,:,:,:]
+        ind+=1
     for i in range(100):
-        if (tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))):
-            pass
-        else:
-            mis_class_imgs[ind,:,:,:] = x[i,:,:,:]
-            ind+=1
+        tf.cond((tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))),lambda:fnHere(i),lambda:pass)            
     mis_classified_img_summary = tf.summary.image('Mis-Classified Images', mis_class_imgs,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])

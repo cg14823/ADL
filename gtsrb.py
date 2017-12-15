@@ -8,6 +8,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import cPickle as pickle
+import time
 
 
 
@@ -256,6 +257,7 @@ def main(_):
                         validation_writer.flush()
                 step += 1
         # Resetting the internal batch indexes
+        '''
         kernel_writer = tf.summary.FileWriter(run_log_dir + "_kernels", sess.graph)
         gr = tf.get_default_graph()
         conv1_kernel = gr.get_tensor_by_name('model/conv1/kernel:0').eval()
@@ -269,21 +271,65 @@ def main(_):
         kernel_writer.add_summary(kernel_sum_out_2)
         kernel_writer.flush()
         kernel_writer.close()
+        '''
         evaluated_images = 0
         test_accuracy = 0
         batch_count = 0
+        correctPredictionCount = [0, 0, 0, 0, 0, 0]
+        trueClassCount = [0, 0, 0, 0, 0, 0]
+
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc = sess.run(accuracy, feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+            temp_acc,logits_out = sess.run([accuracy,logits], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_accuracy += temp_acc 
             batch_count += 1
+            correctPredictionCount, trueClassCount = evaluatePerClass(correctPredictionCount, trueClassCount, logits_out, test_labels)
             evaluated_images += np.shape(test_labels)[0]
 
         test_accuracy = test_accuracy / batch_count
         print('test set: accuracy on test set: %0.3f' % test_accuracy)
+        
+        accuracyPerClass = np.zeros((6,1))
+        for i in range(6):
+            accuracyPerClass = float(correctPredictionCount[i]) / trueClassCount[i]
 
+        print("Accuracy per class")
+        print("O: {:.2f} 1:{:.2f} 2:{:.2f} 3:{:.2f} 4:{:.2f} 5:{:.2f}".format(accuracyPerClass[0], accuracyPerClass[1], accuracyPerClass[2], accuracyPerClass[3], accuracyPerClass[4], accuracyPerClass[5]))
         print('model saved to ' + checkpoint_path)
         train_writer.close()
         validation_writer.close()
+
+def evaluatePerClass(correctPreditionCount, count, logits, labels):
+    trueClass = np.argmax(labels,1)
+    predClass = np.argmax(logits,1)
+    
+    count[0] += np.count_nonzero(trueClass == 0) + np.count_nonzero(trueClass == 1) + np.count_nonzero(trueClass == 2) + np.count_nonzero(trueClass == 3) + np.count_nonzero(trueClass == 4) + np.count_nonzero(trueClass == 5) + np.count_nonzero(trueClass == 7) + np.count_nonzero(trueClass == 8) 
+    count[1] += np.count_nonzero(trueClass == 9) + np.count_nonzero(trueClass == 10) + np.count_nonzero(trueClass == 15) + np.count_nonzero(trueClass == 16)
+    count[2] += np.count_nonzero(trueClass == 6) + np.count_nonzero(trueClass == 32) + np.count_nonzero(trueClass == 41) + np.count_nonzero(trueClass == 42)
+    count[3] += np.count_nonzero(trueClass == 33) + np.count_nonzero(trueClass == 34) + np.count_nonzero(trueClass == 35) + np.count_nonzero(trueClass == 36) + np.count_nonzero(trueClass == 37) + np.count_nonzero(trueClass == 38) + np.count_nonzero(trueClass == 39) + np.count_nonzero(trueClass == 40)
+    count[4] += np.count_nonzero(trueClass == 11) + np.count_nonzero(trueClass == 18) + np.count_nonzero(trueClass == 19) + np.count_nonzero(trueClass == 20) + np.count_nonzero(trueClass == 21) + np.count_nonzero(trueClass == 22) + np.count_nonzero(trueClass == 23) + np.count_nonzero(trueClass == 24) + np.count_nonzero(trueClass == 25) + np.count_nonzero(trueClass == 26) + np.count_nonzero(trueClass == 27) + np.count_nonzero(trueClass == 28) + np.count_nonzero(trueClass == 29) + np.count_nonzero(trueClass == 30) + np.count_nonzero(trueClass == 31)
+    count[5] += np.count_nonzero(trueClass == 12) + np.count_nonzero(trueClass == 13) + np.count_nonzero(trueClass == 14) + np.count_nonzero(trueClass == 17)
+
+
+    i = 0
+    for x in predClass:
+        if x == trueClass[i]:
+            if x < 6 or x == 7  or x == 8:
+                correctPreditionCount[0] += 1
+            elif x == 9 or x == 10 or x == 15 or x == 16:
+                correctPreditionCount[1] += 1
+            elif x == 6 or x == 32 or x == 41 or x == 42:
+                correctPreditionCount[2] += 1
+            elif x > 32 and x < 41:
+                correctPreditionCount[3] += 1
+            elif x == 11 or (x > 17 and x < 32):
+                correctPreditionCount[4] += 1
+            elif x == 12 or x == 13 or x == 14 or x == 17:
+                correctPreditionCount[5] += 1
+            else:
+                print("SHIIIIT x: {}".format(x))
+        i += 1
+
+    return correctPreditionCount, count
 
 def batch_generator(dataset, group, batch_size=BATCH_SIZE):
 

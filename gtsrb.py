@@ -21,7 +21,7 @@ sys.path.append(os.path.join(here, '..', 'CIFAR10'))
 CLASS_COUNT  = 43
 IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
-IMG_CHANNELS = 3
+IMG_CHANNELS = 1
 BATCH_SIZE   = 100
 APPLY_RANDOM_BLUR = 0
 fgsm_eps = 0.05
@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_GETTINGACUUCRAGIAJGAF_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GrascaleInput_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -157,7 +157,10 @@ def main(_):
     # Build the graph for the deep net
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
-        x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        #x_image = tf.map_fn(tf.image.per_image_standardization, x)
+        x_image = tf.map_fn(tf.image.rgb_to_grayscale,x)
+        def fngamma(image): return tf.image.adjust_gamma(image,gamma=0.5)
+        x_image = tf.map_fn(fngamma,x_image)
         #x_image = x
 
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization

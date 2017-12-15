@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_NESTEROV_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GetMisClass_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -183,7 +183,7 @@ def main(_):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         error = tf.subtract(tf.constant(1,dtype=tf.float32),accuracy)
         
-        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9,use_nesterov=True)  
+        optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9)  
         train_step = optimizer.minimize(our_loss)
         
     

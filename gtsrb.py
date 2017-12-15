@@ -186,6 +186,7 @@ def main(_):
         optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate,momentum = 0.9,use_nesterov=True)  
         train_step = optimizer.minimize(our_loss)
         
+    
         
     loss_summary = tf.summary.scalar("Loss", our_loss)
     accuracy_summary = tf.summary.scalar("Accuracy", accuracy)
@@ -197,6 +198,15 @@ def main(_):
     kernel_images_2_in = tf.placeholder(tf.float32)
     kernel_img_summary_1 = tf.summary.image('Kernel Images', kernel_images_1_in,32)
     kernel_img_summary_2 = tf.summary.image('Kernel 2 Images', kernel_images_2_in,32)
+    mis_class_imgs = tf.constant(tf.float32,shape=[BATCH_SIZE ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
+    ind = 0
+    for i in range(100):
+        if (tf.equal(tf.argmax(logits[i,:],0),tf.argmax(y_[i,:],0))):
+            pass
+        else:
+            mis_class_imgs[ind,:,:,:] = x[i,:,:,:]
+            ind+=1
+    mis_classified_img_summary = tf.summary.image('Mis-Classified Images', mis_class_imgs,32)
 
     train_summary = tf.summary.merge([loss_summary, accuracy_summary, learning_rate_summary,in_summary, img_summary,error_summary])
     validation_summary = tf.summary.merge([loss_summary, accuracy_summary,error_summary])
@@ -282,17 +292,19 @@ def main(_):
         batch_count = 0
         correctPredictionCount = [0, 0, 0, 0, 0, 0]
         trueClassCount = [0, 0, 0, 0, 0, 0]
+        mis_class_imgs_writer = tf.summary.FileWriter(run_log_dir + "_mis_classed", sess.graph)
 
         for (test_images, test_labels) in batch_generator(data_set, 'test'):
-            temp_acc,logits_out = sess.run([accuracy,logits], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
+            temp_acc,logits_out,m_c_i_s_o = sess.run([accuracy,logits,mis_classified_img_summary], feed_dict={x: test_images, y_: test_labels, learning_rate: learningRate})
             test_accuracy += temp_acc 
             batch_count += 1
             correctPredictionCount, trueClassCount = evaluatePerClass(correctPredictionCount, trueClassCount, logits_out, test_labels)
             evaluated_images += np.shape(test_labels)[0]
+            mis_class_imgs_writer.add_summary(m_c_i_s_o,batch_count)
 
         test_accuracy = test_accuracy / batch_count
         print('test set: accuracy on test set: %0.3f' % test_accuracy)
-        
+        mis_class_imgs_writer.flush()
         accuracyPerClass = [0.0,0.0,0.0,0.0,0.0,0.0]
         for i in range(6):
             accuracyPerClass[i] = float(correctPredictionCount[i]) / trueClassCount[i]
@@ -302,6 +314,7 @@ def main(_):
         print('model saved to ' + checkpoint_path)
         train_writer.close()
         validation_writer.close()
+        mis_class_imgs_writer.close()
 
 def applyRandomBlur(imageIn):
     imageOut = scipy.ndimage.filters.gaussian_filter(imageIn,2)

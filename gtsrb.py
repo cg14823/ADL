@@ -23,7 +23,7 @@ IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
 IMG_CHANNELS = 3
 BATCH_SIZE   = 100
-APPLY_RANDOM_BLUR = 1
+APPLY_RANDOM_BLUR = 0
 fgsm_eps = 0.05
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('log-frequency', 100,
@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_GettingErrorGraphs2_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GETTINGACUUCRAGIAJGAF_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -301,7 +301,7 @@ def main(_):
             accuracyPerClass[i] = float(correctPredictionCount[i]) / trueClassCount[i]
 
         print("Accuracy per class")
-        print("O: {:.2f} 1:{:.2f} 2:{:.2f} 3:{:.2f} 4:{:.2f} 5:{:.2f}".format(accuracyPerClass[0], accuracyPerClass[1], accuracyPerClass[2], accuracyPerClass[3], accuracyPerClass[4], accuracyPerClass[5]))
+        print("O: {:.4f} 1:{:.4f} 2:{:.4f} 3:{:.4f} 4:{:.4f} 5:{:.4f}".format(accuracyPerClass[0], accuracyPerClass[1], accuracyPerClass[2], accuracyPerClass[3], accuracyPerClass[4], accuracyPerClass[5]))
         print('model saved to ' + checkpoint_path)
         train_writer.close()
         validation_writer.close()

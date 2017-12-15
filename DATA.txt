@@ -1,0 +1,3 @@
+Training runintime: 397.405991077 40 epochs batchsize 100 epoch every 100 batches
+best accuracy = 89.48%
+time per recognition: 10ms 

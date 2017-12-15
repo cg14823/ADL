@@ -33,7 +33,7 @@ tf.app.flags.DEFINE_integer('save-model-frequency', 100,
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
 # Optimisation hyperparameters
-tf.app.flags.DEFINE_integer('max-steps', 5000,
+tf.app.flags.DEFINE_integer('max-steps', 4000,
                             'Number of mini-batches to train on. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
@@ -290,7 +290,7 @@ def main(_):
         
         accuracyPerClass = np.zeros((6,1))
         for i in range(6):
-            accuracyPerClass = float(correctPredictionCount[i]) / trueClassCount[i]
+            accuracyPerClass[i] = float(correctPredictionCount[i]) / trueClassCount[i]
 
         print("Accuracy per class")
         print("O: {:.2f} 1:{:.2f} 2:{:.2f} 3:{:.2f} 4:{:.2f} 5:{:.2f}".format(accuracyPerClass[0], accuracyPerClass[1], accuracyPerClass[2], accuracyPerClass[3], accuracyPerClass[4], accuracyPerClass[5]))

@@ -1,0 +1,2 @@
+model_checkpoint_path: "/mnt/storage/home/tj14830/testFolder/ADL/logs/exp_bs_100_lr_0.01_GETTINGACUUCRAGIAJGAF_NOWHITE_eps_0.05/model.ckpt-4000"
+all_model_checkpoint_paths: "/mnt/storage/home/tj14830/testFolder/ADL/logs/exp_bs_100_lr_0.01_GETTINGACUUCRAGIAJGAF_NOWHITE_eps_0.05/model.ckpt-4000"

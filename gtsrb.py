@@ -42,7 +42,7 @@ tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mi
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_GrascaleInput_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_CLAHE_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -148,7 +148,13 @@ def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
     return (logits,conv1,conv4)
 
 
-
+def rgb2yuv(img):
+    m = np.array([[ 0.29900, -0.16874,  0.50000],
+                 [0.58700, -0.33126, -0.41869],
+                 [ 0.11400, 0.50000, -0.08131]])
+    yuv = np.dot(img,m)
+    yuv=[:,:,1:]+=128.0
+    return yuv
 
 def main(_):
     tf.reset_default_graph()
@@ -158,9 +164,11 @@ def main(_):
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.float32, shape=[None ,IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS])
         #x_image = tf.map_fn(tf.image.per_image_standardization, x)
-        x_image = tf.map_fn(tf.image.rgb_to_grayscale,x)
-        def fngamma(image): return tf.image.adjust_gamma(image,gamma=0.5)
-        x_image = tf.map_fn(fngamma,x_image)
+        x_image = rgb2yuv(x)
+        x_image = x_image[:,:,0]
+        x_image = (x_image / 255.).astype(np.float32)
+        x_image = (exposure.equalize_adapthist(x_image,) - 0.5)
+        x_image = x_image.reshape(x_image.shape + (1,))
         #x_image = x
 
         # the tf fucntion above should perform whitening https://www.tensorflow.org/versions/r1.3/api_docs/python/tf/image/per_image_standardization

@@ -299,7 +299,7 @@ def main(_):
         test_accuracy = test_accuracy / batch_count
         print('test set: accuracy on test set: %0.3f' % test_accuracy)
         
-        accuracyPerClass = np.zeros((6,1))
+        accuracyPerClass = [0.0,0.0,0.0,0.0,0.0,0.0]
         for i in range(6):
             accuracyPerClass[i] = float(correctPredictionCount[i]) / trueClassCount[i]
 

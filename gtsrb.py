@@ -22,27 +22,27 @@ CLASS_COUNT  = 43
 IMG_WIDTH    = 32
 IMG_HEIGHT   = 32
 IMG_CHANNELS = 3
-BATCH_SIZE   = 100
+BATCH_SIZE   = 128 
 APPLY_RANDOM_BLUR = 0
 fgsm_eps = 0.05
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('log-frequency', 100,
+tf.app.flags.DEFINE_integer('log-frequency', 90,
                             'Number of steps between logging results to the console and saving summaries.' +
                             ' (default: %(default)d)')
-tf.app.flags.DEFINE_integer('flush-frequency', 100,
+tf.app.flags.DEFINE_integer('flush-frequency', 90,
                             'Number of steps between flushing summary results. (default: %(default)d)')
-tf.app.flags.DEFINE_integer('save-model-frequency', 100,
+tf.app.flags.DEFINE_integer('save-model-frequency', 90,
                             'Number of steps between model saves. (default: %(default)d)')
 tf.app.flags.DEFINE_string('log-dir', '{cwd}/logs/'.format(cwd=os.getcwd()),
                            'Directory where to write event logs and checkpoint. (default: %(default)s)')
 # Optimisation hyperparameters
-tf.app.flags.DEFINE_integer('max-steps', 4000,
+tf.app.flags.DEFINE_integer('max-steps', 3500,
                             'Number of mini-batches to train on. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('batch-size', BATCH_SIZE, 'Number of examples per mini-batch. (default: %(default)d)')
 tf.app.flags.DEFINE_float('learning-rate', 1e-2, 'Number of examples to run. (default: %(default)d)')
 
 run_log_dir = os.path.join(FLAGS.log_dir,
-                           ('exp_bs_{bs}_lr_{lr}_GetMisClass_eps_{eps}')
+                           ('exp_bs_{bs}_lr_{lr}_GetMisClass_BatchNorm_eps_{eps}')
                            .format(bs=FLAGS.batch_size, lr=FLAGS.learning_rate, eps=fgsm_eps))
 checkpoint_path = os.path.join(run_log_dir, 'model.ckpt')
 
@@ -75,7 +75,7 @@ def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
         kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_regularizer=regularizer
     )
-    conv1_relu = tf.nn.relu(conv1)
+    conv1_relu = tf.nn.relu(tf.layers.batch_normalization(conv1, name='conv1_bn'))
 
     #Pad again?
     pool1 = tf.layers.average_pooling2d(
@@ -97,7 +97,7 @@ def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
         kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_regularizer=regularizer
     )
-    conv2_relu = tf.nn.relu(conv2)
+    conv2_relu = tf.nn.relu(tf.layers.batch_normalization(conv2, name='conv2_bn'))
 
     #Pad again?
     pool2 = tf.layers.average_pooling2d(
@@ -119,7 +119,7 @@ def deepnn(x_image,regularizer, class_count=CLASS_COUNT):
         kernel_initializer=tf.random_uniform_initializer(-0.05,0.05),
         kernel_regularizer=regularizer
     )
-    conv3_relu = tf.nn.relu(conv3)
+    conv3_relu = tf.nn.relu(tf.layers.batch_normalization(conv3, name='conv3_bn'))
 
     pool3 = tf.layers.max_pooling2d(
         inputs=conv3_relu,
